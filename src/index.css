@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-warm-bg: #FAF9F6;
+    --color-card-bg: #FFFFFF;
+    --color-text-main: #1C1917;
+    --color-text-muted: #78716C;
+    --color-border: #E7E5E4;
+    --color-accent: #D97706;
+  }
+
+  .dark {
+    --color-warm-bg: #141312;
+    --color-card-bg: #1C1A18;
+    --color-text-main: #F5F5F4;
+    --color-text-muted: #A8A29E;
+    --color-border: #292524;
+    --color-accent: #F59E0B;
+  }
+
+  html, body {
+    background-color: var(--color-warm-bg);
+    color: var(--color-text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    touch-action: manipulation;
+  }
+
+  /* Allow text selection in inputs and review fields */
+  input, textarea, [contenteditable="true"] {
+    user-select: text;
+  }
+}
+
+/* Safe area support for notch and home bar on iOS / Android PWAs */
+.safe-top {
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+
+.safe-bottom {
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+}
+
+/* Accessible focus ring */
+:focus-visible {
+  outline: 2px solid #D97706;
+  outline-offset: 2px;
+}
+
+/* Smooth transitions respecting reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom scrollbar for desktop preview */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(140, 130, 120, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 130, 120, 0.35);
+}
