@@ -29,7 +29,7 @@ export const Navigation: React.FC<NavigationProps> = ({
       <div className="max-w-md mx-auto px-2 flex justify-around items-center safe-bottom py-1.5">
         {tabs.map((tab) => {
           const Icon = tab.icon;
-          const isActive = currentTab === tab.id;
+          const isActive = currentTab === tab.id || (tab.id === 'settings' && currentTab === 'roadmap');
 
           return (
             <button

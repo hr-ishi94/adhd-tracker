@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { RoutineBlock, DailyLog, Streak } from '../types';
 import { getLastNDays, formatDayLabel, getWeekKey } from '../lib/time';
-import { Flame, PauseCircle, Calendar, Save, Check } from 'lucide-react';
+import { Flame, PauseCircle, Calendar, Save, Check, Minus } from 'lucide-react';
 
 interface WeeklyRetroScreenProps {
   routineBlocks: RoutineBlock[];
@@ -9,6 +9,7 @@ interface WeeklyRetroScreenProps {
   streak: Streak;
   weeklyRetroNotes: Record<string, string>;
   onSaveRetroNote: (weekKey: string, note: string) => void;
+  onOpenRoadmap?: () => void;
 }
 
 export const WeeklyRetroScreen: React.FC<WeeklyRetroScreenProps> = ({
@@ -17,6 +18,7 @@ export const WeeklyRetroScreen: React.FC<WeeklyRetroScreenProps> = ({
   streak,
   weeklyRetroNotes,
   onSaveRetroNote,
+  onOpenRoadmap,
 }) => {
   const currentWeekKey = getWeekKey();
   const [note, setNote] = useState(weeklyRetroNotes[currentWeekKey] || '');
@@ -53,6 +55,14 @@ export const WeeklyRetroScreen: React.FC<WeeklyRetroScreenProps> = ({
             A pattern view, not a grade • Notice rhythms neutrally
           </p>
         </div>
+        {onOpenRoadmap && (
+          <button
+            onClick={onOpenRoadmap}
+            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-focus-100 dark:bg-focus-950 text-focus-700 dark:text-focus-300 hover:bg-focus-200 transition-colors"
+          >
+            Roadmap →
+          </button>
+        )}
       </div>
 
       {/* Streak Header */}
@@ -89,7 +99,7 @@ export const WeeklyRetroScreen: React.FC<WeeklyRetroScreenProps> = ({
         </p>
       </div>
 
-      {/* 7-Day Pattern View */}
+      {/* 7-Day Pattern View with P2 #9 Colorblind-safe shapes */}
       <div className="bg-white dark:bg-warm-850 rounded-xl p-3 border border-warm-200/90 dark:border-warm-800 shadow-soft">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-[11px] font-semibold uppercase tracking-wider text-warm-500 dark:text-warm-400 flex items-center gap-1.5">
@@ -98,10 +108,10 @@ export const WeeklyRetroScreen: React.FC<WeeklyRetroScreenProps> = ({
           </h2>
           <div className="flex items-center gap-2 text-[10px] text-warm-400">
             <span className="inline-flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-focus-500" /> Done
+              <span className="w-3 h-3 rounded-md bg-focus-500 text-white flex items-center justify-center text-[8px] font-bold">✓</span> Done
             </span>
             <span className="inline-flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-warm-300 dark:bg-warm-700" /> Skipped
+              <span className="w-3 h-3 rounded-md bg-warm-200 dark:bg-warm-700 text-warm-600 dark:text-warm-300 flex items-center justify-center text-[8px] font-bold">-</span> Skipped
             </span>
           </div>
         </div>
@@ -135,11 +145,15 @@ export const WeeklyRetroScreen: React.FC<WeeklyRetroScreenProps> = ({
                   const log = dailyLogs[dateStr];
                   const status = log ? log.blockStatus[block.id] : undefined;
 
-                  let dotClass = 'bg-warm-100 dark:bg-warm-900 border border-warm-200 dark:border-warm-800';
+                  let dotClass = 'bg-warm-100 dark:bg-warm-900 border border-warm-200 dark:border-warm-800 text-warm-400';
+                  let content = null;
+
                   if (status === 'done') {
-                    dotClass = 'bg-focus-500 text-white';
+                    dotClass = 'bg-focus-600 text-white';
+                    content = <Check className="w-2.5 h-2.5 stroke-[3]" />;
                   } else if (status === 'skipped') {
-                    dotClass = 'bg-warm-300 dark:bg-warm-700';
+                    dotClass = 'bg-warm-200 dark:bg-warm-700 border-dashed border-warm-400 text-warm-600 dark:text-warm-300';
+                    content = <Minus className="w-2.5 h-2.5 stroke-[3]" />;
                   }
 
                   return (
@@ -148,7 +162,7 @@ export const WeeklyRetroScreen: React.FC<WeeklyRetroScreenProps> = ({
                       title={`${block.name} on ${dateStr}: ${status || 'none'}`}
                       className={`h-5 rounded flex items-center justify-center text-[10px] transition-all ${dotClass}`}
                     >
-                      {status === 'done' && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                      {content}
                     </div>
                   );
                 })}

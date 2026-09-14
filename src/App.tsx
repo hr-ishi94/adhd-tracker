@@ -6,7 +6,7 @@ import type {
   BlockStatus, 
   DailyLog, 
   BrainDumpItem, 
-  AppSettings 
+  Streak 
 } from './types';
 import { 
   loadAppData, 
@@ -14,8 +14,11 @@ import {
   getTodayDateString, 
   getOrCreateDailyLog, 
   updateStreakAfterBlockCompletion, 
-  INITIAL_APP_DATA 
+  INITIAL_APP_DATA,
+  getRoutineBlocksForDate,
+  checkAndRunAutoWeeklyBackup
 } from './lib/storage';
+import { autoResolveMissedBlocks } from './lib/autoResolve';
 import { getCurrentAndNextBlock } from './lib/time';
 import { notifications } from './lib/notifications';
 import { Navigation } from './components/Navigation';
@@ -23,11 +26,21 @@ import { BrainDumpFAB } from './components/BrainDumpFAB';
 import { BrainDumpModal } from './components/BrainDumpModal';
 import { BreakdownModal } from './components/BreakdownModal';
 import { BannerNotification } from './components/BannerNotification';
+import { ToastUndo } from './components/ToastUndo';
 import { TodayScreen } from './screens/TodayScreen';
 import { InboxScreen } from './screens/InboxScreen';
 import { EveningReviewScreen } from './screens/EveningReviewScreen';
 import { WeeklyRetroScreen } from './screens/WeeklyRetroScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { RoadmapScreen } from './screens/RoadmapScreen';
+import { Download, X } from 'lucide-react';
+
+interface UndoState {
+  blockId: string;
+  blockName: string;
+  action: BlockStatus;
+  previousStreak: Streak;
+}
 
 export function App() {
   const [appData, setAppData] = useState<AppData>(() => loadAppData());
@@ -36,6 +49,8 @@ export function App() {
   const [brainDumpOpen, setBrainDumpOpen] = useState(false);
   const [breakdownBlock, setBreakdownBlock] = useState<RoutineBlock | null>(null);
   const [bannerBlock, setBannerBlock] = useState<RoutineBlock | null>(null);
+  const [undoState, setUndoState] = useState<UndoState | null>(null);
+  const [autoBackupNotice, setAutoBackupNotice] = useState(false);
 
   // Sync state to localStorage whenever appData updates
   useEffect(() => {
@@ -62,6 +77,17 @@ export function App() {
     }
   }, [appData.settings.theme]);
 
+  // P0 #1: Check and run automatic weekly backup export on app mount
+  useEffect(() => {
+    const { triggered, updatedData } = checkAndRunAutoWeeklyBackup(appData, new Date());
+    if (triggered) {
+      setAppData(updatedData);
+      setAutoBackupNotice(true);
+      const timer = setTimeout(() => setAutoBackupNotice(false), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   // Keep current time updated every 15 seconds to detect block transitions
   useEffect(() => {
     const interval = setInterval(() => {
@@ -70,8 +96,20 @@ export function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Resolve today's routine blocks based on current day of week
+  const todayBlocks = getRoutineBlocksForDate(appData, currentTime);
+
+  // P0 #2: Auto-resolve missed blocks whose grace period (+30m) has passed
+  useEffect(() => {
+    setAppData((prev) => {
+      const blocksForNow = getRoutineBlocksForDate(prev, currentTime);
+      const res = autoResolveMissedBlocks(prev, blocksForNow, currentTime);
+      return res.changed ? res.data : prev;
+    });
+  }, [currentTime]);
+
   // Compute current and next block
-  const { currentBlock, nextBlock } = getCurrentAndNextBlock(appData.routineBlocks, currentTime);
+  const { currentBlock, nextBlock } = getCurrentAndNextBlock(todayBlocks, currentTime);
 
   // Today's log
   const todayStr = getTodayDateString(currentTime);
@@ -88,12 +126,12 @@ export function App() {
 
   useEffect(() => {
     if (appData.settings.notificationsEnabled) {
-      notifications.scheduleRoutineChecks(appData.routineBlocks, handleBlockTrigger);
+      notifications.scheduleRoutineChecks(todayBlocks, handleBlockTrigger);
     } else {
       notifications.clearScheduled();
     }
     return () => notifications.clearScheduled();
-  }, [appData.routineBlocks, appData.settings.notificationsEnabled, handleBlockTrigger]);
+  }, [todayBlocks, appData.settings.notificationsEnabled, handleBlockTrigger]);
 
   // Snooze handler
   const handleSnooze = (minutes: number) => {
@@ -123,7 +161,18 @@ export function App() {
     });
   };
 
+  // P1 #6: Marking block status + Undo toast support
   const handleMarkBlockStatus = (blockId: string, status: BlockStatus) => {
+    if (status === 'done' || status === 'skipped') {
+      const targetBlock = todayBlocks.find((b) => b.id === blockId);
+      setUndoState({
+        blockId,
+        blockName: targetBlock?.name || 'Routine Block',
+        action: status,
+        previousStreak: { ...appData.streak },
+      });
+    }
+
     setAppData((prev) => {
       const currentLog = getOrCreateDailyLog(prev, todayStr);
       const updatedLog: DailyLog = {
@@ -131,6 +180,13 @@ export function App() {
         blockStatus: {
           ...currentLog.blockStatus,
           [blockId]: status,
+        },
+        blockDetails: {
+          ...(currentLog.blockDetails || {}),
+          [blockId]: {
+            status,
+            autoResolved: false,
+          },
         },
       };
 
@@ -144,7 +200,7 @@ export function App() {
         dailyLogs: updatedLogs,
       };
 
-      const newStreak = updateStreakAfterBlockCompletion(intermediateData, todayStr);
+      const newStreak = updateStreakAfterBlockCompletion(intermediateData, todayStr, todayBlocks);
 
       return {
         ...intermediateData,
@@ -153,12 +209,48 @@ export function App() {
     });
   };
 
+  // Undo block completion or skip
+  const handleUndo = () => {
+    if (!undoState) return;
+    const { blockId, previousStreak } = undoState;
+
+    setAppData((prev) => {
+      const currentLog = getOrCreateDailyLog(prev, todayStr);
+      const updatedStatus = { ...currentLog.blockStatus };
+      delete updatedStatus[blockId];
+
+      const updatedDetails = { ...(currentLog.blockDetails || {}) };
+      delete updatedDetails[blockId];
+
+      const updatedLog: DailyLog = {
+        ...currentLog,
+        blockStatus: updatedStatus,
+        blockDetails: updatedDetails,
+      };
+
+      return {
+        ...prev,
+        streak: previousStreak,
+        dailyLogs: {
+          ...prev.dailyLogs,
+          [todayStr]: updatedLog,
+        },
+      };
+    });
+
+    setUndoState(null);
+  };
+
   const handleSaveFirstStep = (blockId: string, firstStep: string) => {
     setAppData((prev) => ({
       ...prev,
       routineBlocks: prev.routineBlocks.map((b) =>
         b.id === blockId ? { ...b, firstStep } : b
       ),
+      routineSets: prev.routineSets.map((s) => ({
+        ...s,
+        blocks: s.blocks.map((b) => (b.id === blockId ? { ...b, firstStep } : b)),
+      })),
     }));
   };
 
@@ -232,28 +324,6 @@ export function App() {
     }));
   };
 
-  // Settings Actions
-  const handleUpdateRoutineBlocks = (blocks: RoutineBlock[]) => {
-    setAppData((prev) => ({
-      ...prev,
-      routineBlocks: blocks,
-    }));
-  };
-
-  const handleUpdateSettings = (settingsPatch: Partial<AppSettings>) => {
-    setAppData((prev) => ({
-      ...prev,
-      settings: {
-        ...prev.settings,
-        ...settingsPatch,
-      },
-    }));
-  };
-
-  const handleImportData = (imported: AppData) => {
-    setAppData(imported);
-  };
-
   const handleResetAllData = () => {
     setAppData(INITIAL_APP_DATA);
   };
@@ -262,6 +332,23 @@ export function App() {
 
   return (
     <div className="min-h-full flex flex-col bg-warm-50 dark:bg-warm-950 text-warm-900 dark:text-warm-100 transition-colors">
+      {/* Auto Backup Notification Banner */}
+      {autoBackupNotice && (
+        <div className="fixed top-3 left-3 right-3 z-50 max-w-sm mx-auto bg-warm-900 text-white dark:bg-warm-100 dark:text-warm-900 px-3.5 py-2.5 rounded-xl shadow-lifted border border-focus-500/50 flex items-center justify-between text-xs animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-2">
+            <Download className="w-4 h-4 text-focus-400 dark:text-focus-600 shrink-0" />
+            <span><strong>Weekly backup saved!</strong> A copy of your tracker data was downloaded.</span>
+          </div>
+          <button
+            onClick={() => setAutoBackupNotice(false)}
+            className="p-1 hover:bg-white/10 dark:hover:bg-black/10 rounded ml-2 shrink-0"
+            aria-label="Dismiss backup notice"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* In-app reminder banner if a block fires or during test */}
       <BannerNotification
         block={bannerBlock}
@@ -274,7 +361,7 @@ export function App() {
       <main className="flex-1 flex flex-col w-full">
         {currentTab === 'today' && (
           <TodayScreen
-            routineBlocks={appData.routineBlocks}
+            routineBlocks={todayBlocks}
             dailyLog={dailyLog}
             currentBlock={currentBlock}
             nextBlock={nextBlock}
@@ -303,25 +390,43 @@ export function App() {
 
         {currentTab === 'retro' && (
           <WeeklyRetroScreen
-            routineBlocks={appData.routineBlocks}
+            routineBlocks={todayBlocks}
             dailyLogs={appData.dailyLogs}
             streak={appData.streak}
             weeklyRetroNotes={appData.weeklyRetroNotes}
             onSaveRetroNote={handleSaveRetroNote}
+            onOpenRoadmap={() => setCurrentTab('roadmap')}
           />
         )}
 
         {currentTab === 'settings' && (
           <SettingsScreen
             appData={appData}
-            onUpdateRoutineBlocks={handleUpdateRoutineBlocks}
-            onUpdateSettings={handleUpdateSettings}
-            onImportData={handleImportData}
+            onUpdateAppData={(patch) => setAppData((prev) => ({ ...prev, ...patch }))}
+            onOpenRoadmap={() => setCurrentTab('roadmap')}
             onResetAllData={handleResetAllData}
             onTriggerTestNotification={(block) => handleBlockTrigger(block)}
           />
         )}
+
+        {currentTab === 'roadmap' && (
+          <RoadmapScreen
+            sprints={appData.sprints}
+            onUpdateSprints={(sprints) => setAppData((prev) => ({ ...prev, sprints }))}
+            onBack={() => setCurrentTab('settings')}
+          />
+        )}
       </main>
+
+      {/* Undo Toast on Done/Skip */}
+      {undoState && (
+        <ToastUndo
+          blockName={undoState.blockName}
+          action={undoState.action}
+          onUndo={handleUndo}
+          onDismiss={() => setUndoState(null)}
+        />
+      )}
 
       {/* Floating Action Button for instant Brain Dump on every screen */}
       <BrainDumpFAB onClick={() => setBrainDumpOpen(true)} />

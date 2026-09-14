@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { AppData, DailyLog, ReviewWhyReason } from '../types';
 import { generateClaudeDailyAnalysis } from '../lib/claudeExport';
+import { getRoutineBlocksForDate } from '../lib/storage';
 import { 
   Moon, 
   CheckCircle2, 
@@ -10,7 +11,9 @@ import {
   Check, 
   ChevronDown, 
   ChevronUp, 
-  Bot 
+  Bot,
+  DollarSign,
+  FileText
 } from 'lucide-react';
 
 interface EveningReviewScreenProps {
@@ -32,11 +35,13 @@ export const EveningReviewScreen: React.FC<EveningReviewScreenProps> = ({
   dailyLog,
   onSaveReview,
 }) => {
-  const doneBlockNames = appData.routineBlocks
+  const activeBlocks = getRoutineBlocksForDate(appData, new Date());
+
+  const doneBlockNames = activeBlocks
     .filter((b) => dailyLog.blockStatus[b.id] === 'done')
     .map((b) => b.name);
 
-  const slippedBlockNames = appData.routineBlocks
+  const slippedBlockNames = activeBlocks
     .filter((b) => dailyLog.blockStatus[b.id] === 'skipped')
     .map((b) => b.name);
 
@@ -47,6 +52,12 @@ export const EveningReviewScreen: React.FC<EveningReviewScreenProps> = ({
     dailyLog.reviewWhatSlipped || slippedBlockNames.join(', ')
   );
   const [whyReason, setWhyReason] = useState<ReviewWhyReason>(dailyLog.reviewWhy);
+  const [notes, setNotes] = useState(dailyLog.notes || '');
+  const [showNotes, setShowNotes] = useState(Boolean(dailyLog.notes));
+  const [spendingMatched, setSpendingMatched] = useState<boolean | null>(
+    dailyLog.spendingPlanMatched ?? null
+  );
+
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [copiedClaude, setCopiedClaude] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -55,6 +66,13 @@ export const EveningReviewScreen: React.FC<EveningReviewScreenProps> = ({
     if (dailyLog.reviewWhatGotDone) setWhatGotDone(dailyLog.reviewWhatGotDone);
     if (dailyLog.reviewWhatSlipped) setWhatSlipped(dailyLog.reviewWhatSlipped);
     if (dailyLog.reviewWhy) setWhyReason(dailyLog.reviewWhy);
+    if (dailyLog.notes) {
+      setNotes(dailyLog.notes);
+      setShowNotes(true);
+    }
+    if (dailyLog.spendingPlanMatched !== undefined) {
+      setSpendingMatched(dailyLog.spendingPlanMatched);
+    }
   }, [dailyLog]);
 
   const handleSave = () => {
@@ -62,6 +80,8 @@ export const EveningReviewScreen: React.FC<EveningReviewScreenProps> = ({
       reviewWhatGotDone: whatGotDone,
       reviewWhatSlipped: whatSlipped,
       reviewWhy: whyReason,
+      notes: notes.trim(),
+      spendingPlanMatched: spendingMatched,
       reviewCompletedAt: new Date().toISOString(),
     });
     setSavedSuccess(true);
@@ -77,6 +97,8 @@ export const EveningReviewScreen: React.FC<EveningReviewScreenProps> = ({
         reviewWhatGotDone: whatGotDone,
         reviewWhatSlipped: whatSlipped,
         reviewWhy: whyReason,
+        notes: notes.trim(),
+        spendingPlanMatched: spendingMatched,
       },
     },
   };
@@ -179,6 +201,70 @@ export const EveningReviewScreen: React.FC<EveningReviewScreenProps> = ({
             );
           })}
         </div>
+      </div>
+
+      {/* P2 #8: Financial Check-In (Minimal single toggle) */}
+      <div className="bg-white dark:bg-warm-850 rounded-xl p-3 border border-warm-200/90 dark:border-warm-800 shadow-soft">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <DollarSign className="w-3.5 h-3.5 text-focus-600" />
+            <label className="text-xs font-bold text-warm-900 dark:text-warm-100">
+              Did today match your spending plan?
+            </label>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setSpendingMatched(spendingMatched === true ? null : true)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                spendingMatched === true
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300'
+              }`}
+            >
+              Yes
+            </button>
+            <button
+              type="button"
+              onClick={() => setSpendingMatched(spendingMatched === false ? null : false)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                spendingMatched === false
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300'
+              }`}
+            >
+              No
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* P1 #7: Free-form Daily Notes (Collapsed by default, zero friction) */}
+      <div className="bg-white dark:bg-warm-850 rounded-xl p-3 border border-warm-200/90 dark:border-warm-800 shadow-soft">
+        <button
+          type="button"
+          onClick={() => setShowNotes(!showNotes)}
+          className="w-full flex items-center justify-between text-xs font-bold text-warm-800 dark:text-warm-200"
+        >
+          <div className="flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-warm-500" />
+            <span>Anything else? (stray thoughts, notes)</span>
+          </div>
+          {showNotes ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        </button>
+
+        {showNotes && (
+          <div className="mt-2 pt-2 border-t border-warm-100 dark:border-warm-800 animate-in fade-in duration-150">
+            <textarea
+              rows={2}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Unstructured thoughts, how you felt, stray reflections..."
+              className="w-full bg-warm-50 dark:bg-warm-900 text-warm-900 dark:text-warm-100 text-xs sm:text-sm rounded-lg p-2.5 border border-warm-200 dark:border-warm-700 focus:outline-none focus:border-focus-600 dark:focus:border-focus-500 resize-none"
+            />
+          </div>
+        )}
       </div>
 
       {/* Save Review Button */}

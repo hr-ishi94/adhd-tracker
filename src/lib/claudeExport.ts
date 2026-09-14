@@ -1,5 +1,5 @@
 import type { AppData, ReviewWhyReason } from '../types';
-import { getTodayDateString, getOrCreateDailyLog } from './storage';
+import { getTodayDateString, getOrCreateDailyLog, getRoutineBlocksForDate } from './storage';
 
 const WHY_LABELS: Record<NonNullable<ReviewWhyReason>, string> = {
   too_big: 'Task felt too big / overwhelming (Executive dysfunction)',
@@ -22,14 +22,15 @@ export function generateClaudeDailyAnalysis(appData: AppData, targetDate?: strin
     year: 'numeric' 
   });
 
-  // Routine block stats
-  const totalBlocks = appData.routineBlocks.length;
+  const activeBlocks = getRoutineBlocksForDate(appData, dateObj);
+  const totalBlocks = activeBlocks.length;
   let doneCount = 0;
   let skippedCount = 0;
   let pendingCount = 0;
 
-  const blockLines = appData.routineBlocks.map((b) => {
+  const blockLines = activeBlocks.map((b) => {
     const status = log.blockStatus[b.id] || 'pending';
+    const detail = log.blockDetails?.[b.id];
     let icon = '⏳';
     let statusText = 'Pending';
 
@@ -39,13 +40,13 @@ export function generateClaudeDailyAnalysis(appData: AppData, targetDate?: strin
       doneCount++;
     } else if (status === 'skipped') {
       icon = '⏭️';
-      statusText = 'Skipped / Moved Past';
+      statusText = detail?.autoResolved ? 'Skipped (Auto-resolved after grace period)' : 'Skipped / Moved Past';
       skippedCount++;
     } else {
       pendingCount++;
     }
 
-    const stepDetail = b.firstStep ? ` (10-min start action: "${b.firstStep}")` : '';
+    const stepDetail = b.firstStep ? ` (10-min action: "${b.firstStep}")` : '';
     return `- ${icon} **${b.name}** [${b.category}] (${b.startTime} – ${b.endTime}): ${statusText}${stepDetail}`;
   });
 
@@ -61,6 +62,22 @@ export function generateClaudeDailyAnalysis(appData: AppData, targetDate?: strin
     : '- None captured today';
 
   const whyDescription = log.reviewWhy ? (WHY_LABELS[log.reviewWhy] || log.reviewWhy) : 'None reported';
+
+  // Financial check-in (P2 #8)
+  const spendingStatus = log.spendingPlanMatched === true
+    ? '✅ Matched spending plan'
+    : log.spendingPlanMatched === false
+    ? '⚠️ Exceeded or differed from spending plan'
+    : 'Not recorded';
+
+  // Free-form notes (P1 #7)
+  const freeformNotes = log.notes ? `\n\n### 📝 Stray Thoughts & Free-form Notes\n${log.notes}` : '';
+
+  // Active Sprint
+  const activeSprint = appData.sprints?.find((s) => s.status === 'active');
+  const sprintContext = activeSprint 
+    ? `- **Active 2-Week Sprint:** ${activeSprint.name} (${activeSprint.durationWeeks} weeks)` 
+    : '';
 
   return `## 🧠 Daily ADHD Routine Review — ${dayName}, ${formattedDate}
 
@@ -80,6 +97,7 @@ ${blockLines.join('\n')}
 - **What got done:** ${log.reviewWhatGotDone || (doneCount > 0 ? 'Completed scheduled routine blocks' : 'None reported')}
 - **What slipped:** ${log.reviewWhatSlipped || (skippedCount > 0 ? 'See skipped blocks above' : 'None reported')}
 - **Primary friction cause:** ${whyDescription}
+- **Daily Spending Plan Check:** ${spendingStatus}${freeformNotes}
 
 ---
 
@@ -90,6 +108,7 @@ ${dumpLines}
 
 ### 🔥 5. Consistency & Streak Rhythm
 - **Current Streak:** ${appData.streak.current} day(s) *(Personal Best: ${appData.streak.best} days)*
+${sprintContext}
 - **Rule:** Missed blocks pause momentum; no shame reset.
 
 ---

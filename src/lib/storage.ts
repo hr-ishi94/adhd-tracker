@@ -1,8 +1,17 @@
-import type { AppData, RoutineBlock, DailyLog, Streak } from '../types';
+import type { 
+  AppData, 
+  RoutineBlock, 
+  DailyLog, 
+  Streak, 
+  RoutineSet, 
+  RoutineSchedule, 
+  Sprint, 
+  DayOfWeek 
+} from '../types';
 
 export const STORAGE_KEY = 'focus-app-data';
 
-export const DEFAULT_ROUTINE_BLOCKS: RoutineBlock[] = [
+export const DEFAULT_WEEKDAY_BLOCKS: RoutineBlock[] = [
   {
     id: 'block-morning-learning',
     name: 'Morning Learning Sprint',
@@ -47,6 +56,150 @@ export const DEFAULT_ROUTINE_BLOCKS: RoutineBlock[] = [
   },
 ];
 
+export const DEFAULT_SATURDAY_BLOCKS: RoutineBlock[] = [
+  {
+    id: 'block-sat-workout',
+    name: 'Morning Workout & Breakfast',
+    startTime: '07:30',
+    endTime: '09:30',
+    category: 'gym',
+  },
+  {
+    id: 'block-sat-project',
+    name: 'Deep Side Project Sprint',
+    startTime: '10:30',
+    endTime: '13:30',
+    category: 'project',
+  },
+  {
+    id: 'block-sat-learning',
+    name: 'System Design / Architecture Study',
+    startTime: '15:30',
+    endTime: '17:30',
+    category: 'learning',
+  },
+  {
+    id: 'block-sat-review',
+    name: 'Evening Review & Social Time',
+    startTime: '21:00',
+    endTime: '21:30',
+    category: 'review',
+  },
+  {
+    id: 'block-sat-sleep',
+    name: 'Sleep & Rest',
+    startTime: '23:00',
+    endTime: '07:00',
+    category: 'sleep',
+  },
+];
+
+export const DEFAULT_SUNDAY_BLOCKS: RoutineBlock[] = [
+  {
+    id: 'block-sun-morning',
+    name: 'Morning Walk & Rest',
+    startTime: '08:00',
+    endTime: '09:30',
+    category: 'personal',
+  },
+  {
+    id: 'block-sun-learning',
+    name: 'Weekly Planning & Learning Sprint',
+    startTime: '10:30',
+    endTime: '12:30',
+    category: 'learning',
+  },
+  {
+    id: 'block-sun-project',
+    name: 'Side Project Polish',
+    startTime: '16:00',
+    endTime: '18:00',
+    category: 'project',
+  },
+  {
+    id: 'block-sun-retro',
+    name: 'Weekly Retro & Next Week Setup',
+    startTime: '20:30',
+    endTime: '21:30',
+    category: 'review',
+  },
+  {
+    id: 'block-sun-sleep',
+    name: 'Sleep & Early Night',
+    startTime: '22:30',
+    endTime: '05:30',
+    category: 'sleep',
+  },
+];
+
+export const DEFAULT_ROUTINE_SETS: RoutineSet[] = [
+  { id: 'set-weekday', name: 'Weekday', blocks: DEFAULT_WEEKDAY_BLOCKS },
+  { id: 'set-saturday', name: 'Saturday', blocks: DEFAULT_SATURDAY_BLOCKS },
+  { id: 'set-sunday', name: 'Sunday', blocks: DEFAULT_SUNDAY_BLOCKS },
+];
+
+export const DEFAULT_ROUTINE_SCHEDULE: RoutineSchedule = {
+  0: 'set-sunday',
+  1: 'set-weekday',
+  2: 'set-weekday',
+  3: 'set-weekday',
+  4: 'set-weekday',
+  5: 'set-weekday',
+  6: 'set-saturday',
+};
+
+export const DEFAULT_SPRINTS: Sprint[] = [
+  {
+    id: 'sprint-1',
+    name: 'Next.js Full Stack Project & System Architecture',
+    durationWeeks: 2,
+    startDate: new Date().toISOString().slice(0, 10),
+    status: 'active',
+  },
+  {
+    id: 'sprint-2',
+    name: 'Django REST Framework & Microservices',
+    durationWeeks: 2,
+    startDate: null,
+    status: 'upcoming',
+  },
+  {
+    id: 'sprint-3',
+    name: 'DSA Mastery: Trees, Graphs & Dynamic Programming',
+    durationWeeks: 2,
+    startDate: null,
+    status: 'upcoming',
+  },
+  {
+    id: 'sprint-4',
+    name: 'High-Scale System Design & Database Sharding',
+    durationWeeks: 2,
+    startDate: null,
+    status: 'upcoming',
+  },
+  {
+    id: 'sprint-5',
+    name: 'AI Agent Integrations & Real-Time WebSockets',
+    durationWeeks: 2,
+    startDate: null,
+    status: 'upcoming',
+  },
+  {
+    id: 'sprint-6',
+    name: 'Portfolio Polish, CI/CD & Production Hardening',
+    durationWeeks: 2,
+    startDate: null,
+    status: 'upcoming',
+  },
+  {
+    id: 'sprint-7',
+    name: 'UAE Technical Interview Prep & Application Blitz',
+    durationWeeks: 2,
+    startDate: null,
+    status: 'upcoming',
+  },
+];
+
 export const DEFAULT_STREAK: Streak = {
   current: 0,
   best: 0,
@@ -55,8 +208,11 @@ export const DEFAULT_STREAK: Streak = {
 };
 
 export const INITIAL_APP_DATA: AppData = {
-  version: 1,
-  routineBlocks: DEFAULT_ROUTINE_BLOCKS,
+  version: 2,
+  routineBlocks: DEFAULT_WEEKDAY_BLOCKS,
+  routineSets: DEFAULT_ROUTINE_SETS,
+  routineSchedule: DEFAULT_ROUTINE_SCHEDULE,
+  sprints: DEFAULT_SPRINTS,
   dailyLogs: {},
   brainDump: [],
   streak: DEFAULT_STREAK,
@@ -66,6 +222,7 @@ export const INITIAL_APP_DATA: AppData = {
     soundEnabled: true,
     theme: 'system',
   },
+  lastAutoExportDate: null,
 };
 
 export function getTodayDateString(d: Date = new Date()): string {
@@ -80,10 +237,29 @@ export function getEmptyDailyLog(dateStr: string): DailyLog {
     date: dateStr,
     priority: '',
     blockStatus: {},
+    blockDetails: {},
     reviewWhatGotDone: '',
     reviewWhatSlipped: '',
     reviewWhy: null,
+    notes: '',
+    spendingPlanMatched: null,
   };
+}
+
+/**
+ * Resolves the active routine blocks for a given date based on day of week schedule.
+ */
+export function getRoutineBlocksForDate(appData: AppData, d: Date = new Date()): RoutineBlock[] {
+  const dayOfWeek = d.getDay() as DayOfWeek;
+  const setId = appData.routineSchedule?.[dayOfWeek] || 'set-weekday';
+  const matchedSet = appData.routineSets?.find((s) => s.id === setId);
+  if (matchedSet && matchedSet.blocks && matchedSet.blocks.length > 0) {
+    return matchedSet.blocks;
+  }
+  // Fallback to legacy routineBlocks or weekday
+  return appData.routineBlocks && appData.routineBlocks.length > 0
+    ? appData.routineBlocks
+    : DEFAULT_WEEKDAY_BLOCKS;
 }
 
 export function loadAppData(): AppData {
@@ -95,12 +271,28 @@ export function loadAppData(): AppData {
     }
     const parsed = JSON.parse(raw) as Partial<AppData>;
     
-    // Ensure all keys exist in case of future migrations
-    return {
-      version: parsed.version || 1,
-      routineBlocks: parsed.routineBlocks && parsed.routineBlocks.length > 0 
-        ? parsed.routineBlocks 
-        : DEFAULT_ROUTINE_BLOCKS,
+    // Migration to v2: Ensure routineSets, routineSchedule, and sprints exist
+    let routineSets = parsed.routineSets;
+    if (!routineSets || routineSets.length === 0) {
+      const existingBlocks = parsed.routineBlocks && parsed.routineBlocks.length > 0
+        ? parsed.routineBlocks
+        : DEFAULT_WEEKDAY_BLOCKS;
+      routineSets = [
+        { id: 'set-weekday', name: 'Weekday', blocks: existingBlocks },
+        { id: 'set-saturday', name: 'Saturday', blocks: DEFAULT_SATURDAY_BLOCKS },
+        { id: 'set-sunday', name: 'Sunday', blocks: DEFAULT_SUNDAY_BLOCKS },
+      ];
+    }
+
+    const routineSchedule = parsed.routineSchedule || DEFAULT_ROUTINE_SCHEDULE;
+    const sprints = parsed.sprints && parsed.sprints.length > 0 ? parsed.sprints : DEFAULT_SPRINTS;
+
+    const data: AppData = {
+      version: 2,
+      routineBlocks: parsed.routineBlocks || DEFAULT_WEEKDAY_BLOCKS,
+      routineSets,
+      routineSchedule,
+      sprints,
       dailyLogs: parsed.dailyLogs || {},
       brainDump: parsed.brainDump || [],
       streak: parsed.streak || DEFAULT_STREAK,
@@ -110,7 +302,10 @@ export function loadAppData(): AppData {
         soundEnabled: parsed.settings?.soundEnabled ?? true,
         theme: parsed.settings?.theme ?? 'system',
       },
+      lastAutoExportDate: parsed.lastAutoExportDate || null,
     };
+
+    return data;
   } catch (err) {
     console.error('Failed to load focus app data from localStorage:', err);
     return INITIAL_APP_DATA;
@@ -125,40 +320,39 @@ export function saveAppData(data: AppData): void {
   }
 }
 
-/**
- * Updates or creates the DailyLog for today or a specific date.
- */
 export function getOrCreateDailyLog(appData: AppData, dateStr: string = getTodayDateString()): DailyLog {
-  return appData.dailyLogs[dateStr] || getEmptyDailyLog(dateStr);
+  const existing = appData.dailyLogs[dateStr];
+  if (existing) {
+    return {
+      ...existing,
+      blockDetails: existing.blockDetails || {},
+      notes: existing.notes ?? '',
+      spendingPlanMatched: existing.spendingPlanMatched ?? null,
+    };
+  }
+  return getEmptyDailyLog(dateStr);
 }
 
-/**
- * Calculates non-punitive streak:
- * If all active routine blocks for a day are marked Done or Skipped (at least 1 done),
- * streak continues. If a day is missed, streak is PAUSED (never zeroed out).
- */
-export function updateStreakAfterBlockCompletion(appData: AppData, dateStr: string): Streak {
+export function updateStreakAfterBlockCompletion(appData: AppData, dateStr: string, activeBlocks: RoutineBlock[]): Streak {
   const log = appData.dailyLogs[dateStr];
   if (!log) return appData.streak;
 
-  const totalBlocks = appData.routineBlocks.length;
+  const totalBlocks = activeBlocks.length;
   if (totalBlocks === 0) return appData.streak;
 
   let doneCount = 0;
   let skippedCount = 0;
-  for (const block of appData.routineBlocks) {
+  for (const block of activeBlocks) {
     const status = log.blockStatus[block.id];
     if (status === 'done') doneCount++;
     else if (status === 'skipped') skippedCount++;
   }
 
-  // All blocks resolved for the day and at least one actually done
   const allResolved = (doneCount + skippedCount) === totalBlocks;
   const streak = { ...appData.streak };
 
   if (allResolved && doneCount > 0) {
     if (streak.lastCompletedDate !== dateStr) {
-      // Check if lastCompletedDate was yesterday or earlier
       streak.current = streak.current + 1;
       if (streak.current > streak.best) {
         streak.best = streak.current;
@@ -171,34 +365,89 @@ export function updateStreakAfterBlockCompletion(appData: AppData, dateStr: stri
   return streak;
 }
 
-/**
- * Export data as formatted JSON string
- */
 export function exportAppDataJSON(data: AppData): string {
   return JSON.stringify(data, null, 2);
 }
 
+export function downloadBackupFile(data: AppData, prefix: string = 'daily-focus-backup'): void {
+  const jsonStr = exportAppDataJSON(data);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const dateStr = getTodayDateString();
+  link.href = url;
+  link.download = `${prefix}-${dateStr}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 /**
- * Validate and import external JSON
+ * P0 #1: Automatic weekly backup export
+ * Checks on load if 7+ days have passed since last export (or Sunday check).
+ * Triggers download automatically and returns true if backup was triggered.
  */
+export function checkAndRunAutoWeeklyBackup(appData: AppData, now: Date = new Date()): { triggered: boolean; updatedData: AppData } {
+  const todayStr = getTodayDateString(now);
+  const isSunday = now.getDay() === 0;
+
+  let shouldExport = false;
+
+  if (!appData.lastAutoExportDate) {
+    // If never exported, trigger if today is Sunday or user has at least 3 daily logs
+    if (isSunday || Object.keys(appData.dailyLogs).length >= 3) {
+      shouldExport = true;
+    }
+  } else {
+    // Check days difference
+    const lastDate = new Date(appData.lastAutoExportDate);
+    const diffMs = now.getTime() - lastDate.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays >= 7 || (isSunday && diffDays >= 6)) {
+      shouldExport = true;
+    }
+  }
+
+  if (shouldExport) {
+    try {
+      downloadBackupFile(appData, 'daily-focus-auto-backup');
+      const updatedData: AppData = {
+        ...appData,
+        lastAutoExportDate: todayStr,
+      };
+      saveAppData(updatedData);
+      return { triggered: true, updatedData };
+    } catch (err) {
+      console.warn('Auto backup download error:', err);
+    }
+  }
+
+  return { triggered: false, updatedData: appData };
+}
+
 export function importAppDataJSON(jsonStr: string): { success: boolean; data?: AppData; error?: string } {
   try {
     const parsed = JSON.parse(jsonStr);
     if (!parsed || typeof parsed !== 'object') {
       return { success: false, error: 'Invalid JSON format' };
     }
-    if (!Array.isArray(parsed.routineBlocks)) {
-      return { success: false, error: 'Missing or invalid routineBlocks array' };
-    }
+
     const cleanData: AppData = {
-      version: parsed.version || 1,
-      routineBlocks: parsed.routineBlocks,
+      version: parsed.version || 2,
+      routineBlocks: Array.isArray(parsed.routineBlocks) ? parsed.routineBlocks : DEFAULT_WEEKDAY_BLOCKS,
+      routineSets: Array.isArray(parsed.routineSets) ? parsed.routineSets : DEFAULT_ROUTINE_SETS,
+      routineSchedule: parsed.routineSchedule || DEFAULT_ROUTINE_SCHEDULE,
+      sprints: Array.isArray(parsed.sprints) ? parsed.sprints : DEFAULT_SPRINTS,
       dailyLogs: parsed.dailyLogs || {},
       brainDump: Array.isArray(parsed.brainDump) ? parsed.brainDump : [],
       streak: parsed.streak || DEFAULT_STREAK,
       weeklyRetroNotes: parsed.weeklyRetroNotes || {},
       settings: parsed.settings || { notificationsEnabled: false, soundEnabled: true, theme: 'system' },
+      lastAutoExportDate: parsed.lastAutoExportDate || null,
     };
+
     saveAppData(cleanData);
     return { success: true, data: cleanData };
   } catch (err) {
