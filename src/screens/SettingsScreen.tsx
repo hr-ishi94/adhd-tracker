@@ -167,34 +167,34 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   };
 
   return (
-    <div className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-28 safe-top">
-      <div className="flex items-center justify-between mb-4">
+    <div className="flex-1 max-w-md mx-auto w-full px-3.5 pt-2 pb-24 safe-top space-y-2.5">
+      <div className="flex items-center justify-between mb-0.5 px-0.5">
         <div>
-          <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-100">
+          <h1 className="text-xl font-bold text-warm-900 dark:text-warm-100">
             Settings
           </h1>
-          <p className="text-xs text-warm-500 dark:text-warm-400">
-            Customize your routine, reminders & manual safety net
+          <p className="text-[11px] text-warm-500 dark:text-warm-400">
+            Customize routine, reminders & safety net
           </p>
         </div>
         <img 
           src="/logo.png" 
           alt="ADHD Tracker Logo" 
-          className="w-10 h-10 rounded-xl object-contain shadow-soft border border-warm-200/60 dark:border-warm-800" 
+          className="w-8 h-8 rounded-lg object-contain shadow-soft border border-warm-200/60 dark:border-warm-800" 
         />
       </div>
 
       {statusMessage && (
-        <div className="mb-4 p-3 bg-focus-100 dark:bg-focus-950/60 border border-focus-200 dark:border-focus-800 text-focus-900 dark:text-focus-200 rounded-xl text-xs font-medium animate-in fade-in duration-200 text-center">
+        <div className="p-2.5 bg-focus-100 dark:bg-focus-950/60 border border-focus-200 dark:border-focus-800 text-focus-900 dark:text-focus-200 rounded-xl text-xs font-medium animate-in fade-in duration-200 text-center">
           {statusMessage}
         </div>
       )}
 
       {/* Routine Blocks Manager */}
-      <div className="bg-white dark:bg-warm-850 rounded-2xl p-4 border border-warm-200/90 dark:border-warm-800 shadow-soft mb-5">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-white dark:bg-warm-850 rounded-xl p-3 border border-warm-200/90 dark:border-warm-800 shadow-soft">
+        <div className="flex items-center justify-between mb-2">
           <div>
-            <h2 className="text-sm font-bold text-warm-900 dark:text-warm-100">
+            <h2 className="text-xs font-bold text-warm-900 dark:text-warm-100">
               Routine Blocks
             </h2>
             <p className="text-xs text-warm-500 dark:text-warm-400">
@@ -353,20 +353,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       </div>
 
       {/* Notifications & Reminders (SPEC §4.4, §9) */}
-      <div className="bg-white dark:bg-warm-850 rounded-2xl p-4 border border-warm-200/90 dark:border-warm-800 shadow-soft mb-5">
+      <div className="bg-white dark:bg-warm-850 rounded-xl p-3 border border-warm-200/90 dark:border-warm-800 shadow-soft">
         <div className="flex items-start justify-between gap-3 mb-2">
           <div>
-            <h2 className="text-sm font-bold text-warm-900 dark:text-warm-100 flex items-center gap-2">
-              <Bell className="w-4 h-4 text-focus-600" />
+            <h2 className="text-xs font-bold text-warm-900 dark:text-warm-100 flex items-center gap-1.5">
+              <Bell className="w-3.5 h-3.5 text-focus-600" />
               <span>Routine Reminders</span>
             </h2>
-            <p className="text-xs text-warm-500 dark:text-warm-400 mt-0.5">
-              Client-side notifications fire when each block begins (with sound & snooze).
+            <p className="text-[11px] text-warm-500 dark:text-warm-400 mt-0.5">
+              Notifications fire at block start with sound and snooze.
             </p>
           </div>
           <button
             onClick={handleToggleNotifications}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors shrink-0 ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors shrink-0 ${
               appData.settings.notificationsEnabled
                 ? 'bg-focus-600 text-white'
                 : 'bg-warm-200 dark:bg-warm-800 text-warm-700 dark:text-warm-300'
@@ -376,9 +376,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </button>
         </div>
 
-        <div className="flex items-center justify-between pt-3 border-t border-warm-100 dark:border-warm-800">
-          <span className="text-xs text-warm-600 dark:text-warm-400">
-            Preview reminder banner & tone:
+        <div className="flex items-center justify-between pt-2 border-t border-warm-100 dark:border-warm-800 text-xs">
+          <span className="text-warm-600 dark:text-warm-400 text-[11px]">
+            Preview reminder banner:
           </span>
           <button
             onClick={() => {
@@ -389,75 +389,75 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             }}
             className="text-xs font-medium text-focus-600 dark:text-focus-400 hover:underline"
           >
-            Test notification
+            Test reminder
           </button>
         </div>
       </div>
 
       {/* Appearance / Theme */}
-      <div className="bg-white dark:bg-warm-850 rounded-2xl p-4 border border-warm-200/90 dark:border-warm-800 shadow-soft mb-5">
-        <h2 className="text-sm font-bold text-warm-900 dark:text-warm-100 mb-2">
+      <div className="bg-white dark:bg-warm-850 rounded-xl p-3 border border-warm-200/90 dark:border-warm-800 shadow-soft">
+        <h2 className="text-xs font-bold text-warm-900 dark:text-warm-100 mb-1.5">
           Appearance
         </h2>
-        <div className="grid grid-cols-3 gap-2 text-xs font-medium">
+        <div className="grid grid-cols-3 gap-1.5 text-xs font-medium">
           <button
             onClick={() => onUpdateSettings({ theme: 'system' })}
-            className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl border transition-all ${
+            className={`flex items-center justify-center gap-1.5 py-2 rounded-lg border transition-all ${
               appData.settings.theme === 'system'
                 ? 'bg-focus-50 border-focus-600 text-focus-800 dark:bg-focus-950/40 dark:border-focus-500 dark:text-focus-300 font-bold'
                 : 'bg-warm-50 dark:bg-warm-900 border-warm-200 dark:border-warm-800 text-warm-600 dark:text-warm-400'
             }`}
           >
-            <Laptop className="w-3.5 h-3.5" />
+            <Laptop className="w-3 h-3" />
             <span>System</span>
           </button>
 
           <button
             onClick={() => onUpdateSettings({ theme: 'light' })}
-            className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl border transition-all ${
+            className={`flex items-center justify-center gap-1.5 py-2 rounded-lg border transition-all ${
               appData.settings.theme === 'light'
                 ? 'bg-focus-50 border-focus-600 text-focus-800 dark:bg-focus-950/40 dark:border-focus-500 dark:text-focus-300 font-bold'
                 : 'bg-warm-50 dark:bg-warm-900 border-warm-200 dark:border-warm-800 text-warm-600 dark:text-warm-400'
             }`}
           >
-            <Sun className="w-3.5 h-3.5" />
-            <span>Warm Light</span>
+            <Sun className="w-3 h-3" />
+            <span>Light</span>
           </button>
 
           <button
             onClick={() => onUpdateSettings({ theme: 'dark' })}
-            className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl border transition-all ${
+            className={`flex items-center justify-center gap-1.5 py-2 rounded-lg border transition-all ${
               appData.settings.theme === 'dark'
                 ? 'bg-focus-50 border-focus-600 text-focus-800 dark:bg-focus-950/40 dark:border-focus-500 dark:text-focus-300 font-bold'
                 : 'bg-warm-50 dark:bg-warm-900 border-warm-200 dark:border-warm-800 text-warm-600 dark:text-warm-400'
             }`}
           >
-            <Moon className="w-3.5 h-3.5" />
-            <span>Calm Dark</span>
+            <Moon className="w-3 h-3" />
+            <span>Dark</span>
           </button>
         </div>
       </div>
 
       {/* Manual Safety Net: JSON Export / Import (SPEC §4.9) */}
-      <div className="bg-white dark:bg-warm-850 rounded-2xl p-4 border border-warm-200/90 dark:border-warm-800 shadow-soft mb-5">
-        <h2 className="text-sm font-bold text-warm-900 dark:text-warm-100 mb-1">
+      <div className="bg-white dark:bg-warm-850 rounded-xl p-3 border border-warm-200/90 dark:border-warm-800 shadow-soft">
+        <h2 className="text-xs font-bold text-warm-900 dark:text-warm-100 mb-0.5">
           Manual Safety Net (Export / Import)
         </h2>
-        <p className="text-xs text-warm-500 dark:text-warm-400 mb-3">
+        <p className="text-[11px] text-warm-500 dark:text-warm-400 mb-2">
           Since all data stays purely on this device, export your backup JSON anytime.
         </p>
 
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={handleExportJSON}
-            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-warm-100 hover:bg-warm-200 dark:bg-warm-800 dark:hover:bg-warm-700 text-warm-800 dark:text-warm-200 text-xs font-semibold transition-all"
+            className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg bg-warm-100 hover:bg-warm-200 dark:bg-warm-800 dark:hover:bg-warm-700 text-warm-800 dark:text-warm-200 text-xs font-semibold transition-all"
           >
-            <Download className="w-3.5 h-3.5 text-warm-600" />
+            <Download className="w-3 h-3 text-warm-600" />
             <span>Export Backup</span>
           </button>
 
-          <label className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-warm-100 hover:bg-warm-200 dark:bg-warm-800 dark:hover:bg-warm-700 text-warm-800 dark:text-warm-200 text-xs font-semibold cursor-pointer transition-all">
-            <Upload className="w-3.5 h-3.5 text-warm-600" />
+          <label className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg bg-warm-100 hover:bg-warm-200 dark:bg-warm-800 dark:hover:bg-warm-700 text-warm-800 dark:text-warm-200 text-xs font-semibold cursor-pointer transition-all">
+            <Upload className="w-3 h-3 text-warm-600" />
             <span>Import Backup</span>
             <input
               type="file"
@@ -470,20 +470,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       </div>
 
       {/* Reset Data */}
-      <div className="bg-white dark:bg-warm-850 rounded-2xl p-4 border border-red-200/60 dark:border-red-900/40 shadow-soft">
+      <div className="bg-white dark:bg-warm-850 rounded-xl p-3 border border-red-200/60 dark:border-red-900/40 shadow-soft">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
-              <ShieldAlert className="w-4 h-4" />
+            <h2 className="text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1">
+              <ShieldAlert className="w-3.5 h-3.5" />
               <span>Reset All Data</span>
             </h2>
-            <p className="text-xs text-warm-500 dark:text-warm-400 mt-0.5">
+            <p className="text-[11px] text-warm-500 dark:text-warm-400">
               Restore default blocks and clear local history
             </p>
           </div>
           <button
             onClick={handleReset}
-            className="px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 text-xs font-semibold rounded-xl transition-colors"
+            className="px-2.5 py-1 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 text-xs font-semibold rounded-lg transition-colors"
           >
             Reset
           </button>

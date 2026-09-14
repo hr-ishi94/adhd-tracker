@@ -32,9 +32,9 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
   };
 
   return (
-    <div className="w-full max-w-md mx-auto px-4 mb-4">
+    <div className="w-full">
       <div 
-        className="bg-white dark:bg-warm-850 rounded-2xl p-3.5 border border-warm-200/90 dark:border-warm-800/80 shadow-soft transition-all"
+        className="bg-white dark:bg-warm-850 rounded-xl p-3 border border-warm-200/90 dark:border-warm-800/80 shadow-soft transition-all"
       >
         <div className="flex items-center justify-between gap-2 mb-1.5">
           <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-warm-500 dark:text-warm-400">

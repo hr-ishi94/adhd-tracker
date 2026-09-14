@@ -20,7 +20,7 @@ export const ProgressStrip: React.FC<ProgressStripProps> = ({ blocks, dailyLog }
   });
 
   return (
-    <div className="w-full pt-2 pb-1 px-4 max-w-md mx-auto" aria-label="Today's progress">
+    <div className="w-full py-1" aria-label="Today's progress">
       <div className="flex items-center justify-between gap-1.5 py-1">
         {blocks.map((block) => {
           const status = dailyLog.blockStatus[block.id] || 'pending';

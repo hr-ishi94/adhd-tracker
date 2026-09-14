@@ -30,14 +30,14 @@ export const InboxScreen: React.FC<InboxScreenProps> = ({
   };
 
   return (
-    <div className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-24 safe-top">
-      <div className="flex items-center justify-between mb-4">
+    <div className="flex-1 max-w-md mx-auto w-full px-3.5 pt-2 pb-24 safe-top space-y-2.5">
+      <div className="flex items-center justify-between mb-1 px-0.5">
         <div>
-          <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-100">
+          <h1 className="text-xl font-bold text-warm-900 dark:text-warm-100">
             Brain Dump Inbox
           </h1>
-          <p className="text-xs text-warm-500 dark:text-warm-400 mt-0.5">
-            Thoughts captured out of working memory. No pressure.
+          <p className="text-[11px] text-warm-500 dark:text-warm-400">
+            Thoughts out of working memory. No pressure.
           </p>
         </div>
         {convertedItems.length > 0 && (
@@ -51,8 +51,8 @@ export const InboxScreen: React.FC<InboxScreenProps> = ({
       </div>
 
       {items.length === 0 ? (
-        <div className="text-center py-16 px-4 bg-white dark:bg-warm-850 rounded-3xl border border-warm-200/90 dark:border-warm-800 shadow-soft">
-          <p className="text-base font-semibold text-warm-800 dark:text-warm-200">
+        <div className="text-center py-10 px-4 bg-white dark:bg-warm-850 rounded-2xl border border-warm-200/90 dark:border-warm-800 shadow-soft">
+          <p className="text-sm font-semibold text-warm-800 dark:text-warm-200">
             Your mind is clear
           </p>
           <p className="text-xs text-warm-500 dark:text-warm-400 mt-1 max-w-xs mx-auto">
@@ -60,11 +60,11 @@ export const InboxScreen: React.FC<InboxScreenProps> = ({
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {activeItems.map((item) => (
             <div
               key={item.id}
-              className="bg-white dark:bg-warm-850 rounded-2xl p-4 border border-warm-200/90 dark:border-warm-800 shadow-soft transition-all"
+              className="bg-white dark:bg-warm-850 rounded-xl p-3 border border-warm-200/90 dark:border-warm-800 shadow-soft transition-all"
             >
               <p className="text-sm sm:text-base text-warm-900 dark:text-warm-100 whitespace-pre-wrap leading-relaxed">
                 {item.text}
