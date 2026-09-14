@@ -61,8 +61,33 @@ export const AdditionalTodosSection: React.FC<AdditionalTodosSectionProps> = ({
 
   return (
     <div className="space-y-1.5 pt-0.5">
+      {/* Empty State: Clear, inviting card when no to-dos exist yet */}
+      {!topAItem && openTodos.length === 0 && !isExpanded && (
+        <div className="bg-white/80 dark:bg-warm-850/80 rounded-xl p-2.5 border border-dashed border-warm-300 dark:border-warm-700 shadow-soft flex items-center justify-between transition-all">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-300/70 dark:border-amber-800">
+              ABC
+            </span>
+            <span className="text-xs font-semibold text-warm-700 dark:text-warm-300">
+              Additional To-Dos
+            </span>
+            <span className="text-[10px] text-warm-400 dark:text-warm-500">
+              (Ad-hoc tasks)
+            </span>
+          </div>
+
+          <button
+            onClick={() => setIsExpanded(true)}
+            className="flex items-center gap-1 text-xs font-semibold text-focus-700 dark:text-focus-300 bg-focus-50 hover:bg-focus-100 dark:bg-focus-900/40 px-2.5 py-1 rounded-lg border border-focus-200/70 dark:border-focus-800/70 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add To-Do</span>
+          </button>
+        </div>
+      )}
+
       {/* Top A item: Single line, small, non-competing with the main routine block */}
-      {topAItem ? (
+      {topAItem && (
         <div className="bg-white dark:bg-warm-850 rounded-xl px-3 py-2 border border-warm-200/90 dark:border-warm-800 shadow-soft transition-all">
           <div className="flex items-center justify-between gap-2.5">
             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -83,37 +108,32 @@ export const AdditionalTodosSection: React.FC<AdditionalTodosSectionProps> = ({
             </button>
           </div>
         </div>
-      ) : (
-        /* If no A item, show a subtle prompt without alarm */
-        openTodos.length === 0 ? null : (
-          <div className="px-3 py-1.5 text-center text-[11px] text-warm-400 dark:text-warm-500 italic">
-            No priority A must-dos right now.
-          </div>
-        )
       )}
 
-      {/* Collapsible Disclosure Toggle */}
-      <div className="flex items-center justify-between px-1">
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="inline-flex items-center gap-1 text-[11px] font-medium text-warm-500 hover:text-warm-800 dark:text-warm-400 dark:hover:text-warm-200 transition-colors"
-        >
-          <span>
-            {isExpanded
-              ? 'Hide additional to-dos'
-              : secondaryCount > 0
-              ? `Show more to-dos (${secondaryCount})`
-              : 'Add or view to-dos (A/B/C)'}
-          </span>
-          {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-        </button>
+      {/* When A item is present or items exist, show disclosure toggle */}
+      {(topAItem || openTodos.length > 0 || isExpanded) && (
+        <div className="flex items-center justify-between px-1">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-warm-600 hover:text-warm-900 dark:text-warm-400 dark:hover:text-warm-200 transition-colors py-0.5"
+          >
+            <span>
+              {isExpanded
+                ? 'Hide additional to-dos'
+                : secondaryCount > 0
+                ? `Show more to-dos (${secondaryCount})`
+                : '+ Add / view to-dos (A/B/C)'}
+            </span>
+            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
 
-        {!isExpanded && (
-          <span className="text-[10px] text-warm-400">
-            Max 3 per tier
-          </span>
-        )}
-      </div>
+          {!isExpanded && (
+            <span className="text-[10px] text-warm-400">
+              Max 3 per tier
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Expanded Section: B & C items + remaining A items + Quick Add */}
       {isExpanded && (
