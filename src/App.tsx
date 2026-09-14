@@ -295,7 +295,7 @@ export function App() {
 
         {currentTab === 'review' && (
           <EveningReviewScreen
-            routineBlocks={appData.routineBlocks}
+            appData={appData}
             dailyLog={dailyLog}
             onSaveReview={handleSaveReview}
           />
