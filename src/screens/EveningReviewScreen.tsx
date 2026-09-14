@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { AppData, DailyLog, ReviewWhyReason } from '../types';
 import { generateClaudeDailyAnalysis } from '../lib/claudeExport';
-import { getRoutineBlocksForDate } from '../lib/storage';
+import { getRoutineBlocksForDate, getCompletedTodosForDate } from '../lib/storage';
 import { 
   Moon, 
   CheckCircle2, 
@@ -13,7 +13,8 @@ import {
   ChevronUp, 
   Bot,
   DollarSign,
-  FileText
+  FileText,
+  CheckSquare
 } from 'lucide-react';
 
 interface EveningReviewScreenProps {
@@ -36,6 +37,7 @@ export const EveningReviewScreen: React.FC<EveningReviewScreenProps> = ({
   onSaveReview,
 }) => {
   const activeBlocks = getRoutineBlocksForDate(appData, new Date());
+  const completedTodosToday = getCompletedTodosForDate(appData.todos, dailyLog.date);
 
   const doneBlockNames = activeBlocks
     .filter((b) => dailyLog.blockStatus[b.id] === 'done')
@@ -45,8 +47,13 @@ export const EveningReviewScreen: React.FC<EveningReviewScreenProps> = ({
     .filter((b) => dailyLog.blockStatus[b.id] === 'skipped')
     .map((b) => b.name);
 
+  const initialGotDone = [
+    ...doneBlockNames,
+    ...completedTodosToday.map((t) => `[${t.priority}] ${t.text}`),
+  ].join(', ');
+
   const [whatGotDone, setWhatGotDone] = useState(
-    dailyLog.reviewWhatGotDone || doneBlockNames.join(', ')
+    dailyLog.reviewWhatGotDone || initialGotDone
   );
   const [whatSlipped, setWhatSlipped] = useState(
     dailyLog.reviewWhatSlipped || slippedBlockNames.join(', ')
@@ -154,6 +161,23 @@ export const EveningReviewScreen: React.FC<EveningReviewScreenProps> = ({
           placeholder="e.g. Morning DSA sprint, system design notes..."
           className="w-full bg-warm-50 dark:bg-warm-900 text-warm-900 dark:text-warm-100 text-xs sm:text-sm rounded-lg p-2.5 border border-warm-200 dark:border-warm-700 focus:outline-none focus:border-focus-600 dark:focus:border-focus-500 resize-none"
         />
+
+        {completedTodosToday.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-warm-100 dark:border-warm-800 flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] uppercase font-bold text-focus-700 dark:text-focus-400 flex items-center gap-1">
+              <CheckSquare className="w-3 h-3" />
+              <span>To-dos finished:</span>
+            </span>
+            {completedTodosToday.map((t) => (
+              <span
+                key={t.id}
+                className="text-[11px] px-2 py-0.5 rounded-md bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 font-medium"
+              >
+                [{t.priority}] {t.text}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Question 2: What slipped? */}

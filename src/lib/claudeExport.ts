@@ -1,5 +1,11 @@
 import type { AppData, ReviewWhyReason } from '../types';
-import { getTodayDateString, getOrCreateDailyLog, getRoutineBlocksForDate } from './storage';
+import { 
+  getTodayDateString, 
+  getOrCreateDailyLog, 
+  getRoutineBlocksForDate,
+  getCompletedTodosForDate,
+  getTodosByPriority
+} from './storage';
 
 const WHY_LABELS: Record<NonNullable<ReviewWhyReason>, string> = {
   too_big: 'Task felt too big / overwhelming (Executive dysfunction)',
@@ -79,6 +85,18 @@ export function generateClaudeDailyAnalysis(appData: AppData, targetDate?: strin
     ? `- **Active 2-Week Sprint:** ${activeSprint.name} (${activeSprint.durationWeeks} weeks)` 
     : '';
 
+  // Additional To-Dos (ABC)
+  const completedTodos = getCompletedTodosForDate(appData.todos, dateStr);
+  const openATodos = getTodosByPriority(appData.todos, 'A');
+
+  const completedTodoLines = completedTodos.length > 0
+    ? completedTodos.map((t) => `- ✅ [${t.priority}] ${t.text}`).join('\n')
+    : '- None completed today';
+
+  const pendingATodoLines = openATodos.length > 0
+    ? openATodos.map((t) => `- ⏳ [A] ${t.text}`).join('\n')
+    : '- None pending';
+
   return `## 🧠 Daily ADHD Routine Review — ${dayName}, ${formattedDate}
 
 ### 🎯 1. Today's One Thing (Primary Focus)
@@ -90,6 +108,14 @@ export function generateClaudeDailyAnalysis(appData: AppData, targetDate?: strin
 ${blockLines.join('\n')}
 
 **Summary:** ${doneCount} Done | ${skippedCount} Skipped | ${pendingCount} Remaining
+
+---
+
+### 📋 2.5. Additional To-Dos (ABC Psychologist Method)
+- **Completed Today:**
+${completedTodoLines}
+- **Must-Do [A] Still Open:**
+${pendingATodoLines}
 
 ---
 

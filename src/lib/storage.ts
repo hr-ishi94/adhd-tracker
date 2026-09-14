@@ -6,7 +6,9 @@ import type {
   RoutineSet, 
   RoutineSchedule, 
   Sprint, 
-  DayOfWeek 
+  DayOfWeek,
+  TodoItem,
+  TodoPriority
 } from '../types';
 
 export const STORAGE_KEY = 'focus-app-data';
@@ -213,6 +215,7 @@ export const INITIAL_APP_DATA: AppData = {
   routineSets: DEFAULT_ROUTINE_SETS,
   routineSchedule: DEFAULT_ROUTINE_SCHEDULE,
   sprints: DEFAULT_SPRINTS,
+  todos: [],
   dailyLogs: {},
   brainDump: [],
   streak: DEFAULT_STREAK,
@@ -238,6 +241,7 @@ export function getEmptyDailyLog(dateStr: string): DailyLog {
     priority: '',
     blockStatus: {},
     blockDetails: {},
+    completedTodos: [],
     reviewWhatGotDone: '',
     reviewWhatSlipped: '',
     reviewWhy: null,
@@ -286,6 +290,7 @@ export function loadAppData(): AppData {
 
     const routineSchedule = parsed.routineSchedule || DEFAULT_ROUTINE_SCHEDULE;
     const sprints = parsed.sprints && parsed.sprints.length > 0 ? parsed.sprints : DEFAULT_SPRINTS;
+    const todos = Array.isArray(parsed.todos) ? parsed.todos : [];
 
     const data: AppData = {
       version: 2,
@@ -293,6 +298,7 @@ export function loadAppData(): AppData {
       routineSets,
       routineSchedule,
       sprints,
+      todos,
       dailyLogs: parsed.dailyLogs || {},
       brainDump: parsed.brainDump || [],
       streak: parsed.streak || DEFAULT_STREAK,
@@ -440,6 +446,7 @@ export function importAppDataJSON(jsonStr: string): { success: boolean; data?: A
       routineSets: Array.isArray(parsed.routineSets) ? parsed.routineSets : DEFAULT_ROUTINE_SETS,
       routineSchedule: parsed.routineSchedule || DEFAULT_ROUTINE_SCHEDULE,
       sprints: Array.isArray(parsed.sprints) ? parsed.sprints : DEFAULT_SPRINTS,
+      todos: Array.isArray(parsed.todos) ? parsed.todos : [],
       dailyLogs: parsed.dailyLogs || {},
       brainDump: Array.isArray(parsed.brainDump) ? parsed.brainDump : [],
       streak: parsed.streak || DEFAULT_STREAK,
@@ -454,3 +461,53 @@ export function importAppDataJSON(jsonStr: string): { success: boolean; data?: A
     return { success: false, error: (err as Error).message || 'Failed to parse JSON file' };
   }
 }
+
+/**
+ * Returns all active (open) todos.
+ */
+export function getActiveTodos(todos: TodoItem[] = []): TodoItem[] {
+  return todos.filter((t) => t.status === 'open');
+}
+
+/**
+ * Returns open todos for a specific priority tier (A, B, or C).
+ */
+export function getTodosByPriority(todos: TodoItem[] = [], priority: TodoPriority): TodoItem[] {
+  return todos.filter((t) => t.status === 'open' && t.priority === priority);
+}
+
+/**
+ * Checks whether an item can be added to the given priority tier.
+ * Capped at 3 open items per letter (A/B/C).
+ */
+export function canAddTodo(todos: TodoItem[] = [], priority: TodoPriority): boolean {
+  const count = getTodosByPriority(todos, priority).length;
+  return count < 3;
+}
+
+/**
+ * Returns todos completed on a specific date.
+ */
+export function getCompletedTodosForDate(todos: TodoItem[] = [], dateStr: string): TodoItem[] {
+  return todos.filter((t) => t.status === 'done' && t.completedDate === dateStr);
+}
+
+/**
+ * Returns open todos that were created more than 7 days ago
+ * and have not yet been flagged during the given retro week.
+ */
+export function getSittingTodosOver7Days(
+  todos: TodoItem[] = [],
+  currentWeekKey: string,
+  now: Date = new Date()
+): TodoItem[] {
+  const sevenDaysAgoMs = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+  return todos.filter((t) => {
+    if (t.status !== 'open') return false;
+    // Don't repeat if already nudged/reviewed for this week
+    if (t.lastNudgeWeekKey === currentWeekKey) return false;
+    const createdMs = new Date(t.createdDate).getTime();
+    return createdMs <= sevenDaysAgoMs;
+  });
+}
+

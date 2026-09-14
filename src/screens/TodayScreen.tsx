@@ -1,8 +1,9 @@
 import React from 'react';
-import type { RoutineBlock, DailyLog, BlockStatus } from '../types';
+import type { RoutineBlock, DailyLog, BlockStatus, TodoItem, TodoPriority } from '../types';
 import { formatTimeRange } from '../lib/time';
 import { PriorityCard } from '../components/PriorityCard';
 import { ProgressStrip } from '../components/ProgressStrip';
+import { AdditionalTodosSection } from '../components/AdditionalTodosSection';
 import { Check, FastForward, Split, Sparkles, CheckCircle2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -11,9 +12,14 @@ interface TodayScreenProps {
   dailyLog: DailyLog;
   currentBlock: RoutineBlock | null;
   nextBlock: RoutineBlock | null;
+  todos: TodoItem[];
   onUpdatePriority: (newPriority: string) => void;
   onMarkBlockStatus: (blockId: string, status: BlockStatus) => void;
   onOpenBreakdown: (block: RoutineBlock) => void;
+  onToggleTodo: (id: string) => void;
+  onAddTodo: (text: string, priority: TodoPriority) => boolean;
+  onChangeTodoPriority: (id: string, newPriority: TodoPriority) => void;
+  onDeleteTodo: (id: string) => void;
 }
 
 export const TodayScreen: React.FC<TodayScreenProps> = ({
@@ -21,9 +27,14 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
   dailyLog,
   currentBlock,
   nextBlock,
+  todos,
   onUpdatePriority,
   onMarkBlockStatus,
   onOpenBreakdown,
+  onToggleTodo,
+  onAddTodo,
+  onChangeTodoPriority,
+  onDeleteTodo,
 }) => {
   const currentStatus = currentBlock ? dailyLog.blockStatus[currentBlock.id] || 'pending' : 'pending';
 
@@ -203,6 +214,15 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
           </div>
         )}
       </div>
+
+      {/* Additional To-Dos: Top A-Item & Collapsible B/C Disclosure */}
+      <AdditionalTodosSection
+        todos={todos}
+        onToggleTodo={onToggleTodo}
+        onAddTodo={onAddTodo}
+        onChangeTodoPriority={onChangeTodoPriority}
+        onDeleteTodo={onDeleteTodo}
+      />
 
       {/* Next Block */}
       <div>

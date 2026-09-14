@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import type { RoutineBlock, DailyLog, Streak } from '../types';
+import type { RoutineBlock, DailyLog, Streak, TodoItem } from '../types';
 import { getLastNDays, formatDayLabel, getWeekKey } from '../lib/time';
-import { Flame, PauseCircle, Calendar, Save, Check, Minus } from 'lucide-react';
+import { getSittingTodosOver7Days } from '../lib/storage';
+import { Flame, PauseCircle, Calendar, Save, Check, Minus, Clock } from 'lucide-react';
 
 interface WeeklyRetroScreenProps {
   routineBlocks: RoutineBlock[];
   dailyLogs: Record<string, DailyLog>;
   streak: Streak;
   weeklyRetroNotes: Record<string, string>;
+  todos?: TodoItem[];
   onSaveRetroNote: (weekKey: string, note: string) => void;
+  onAcknowledgeSittingTodo?: (todoId: string, action: 'keep' | 'demote' | 'done' | 'delete') => void;
   onOpenRoadmap?: () => void;
 }
 
@@ -17,12 +20,15 @@ export const WeeklyRetroScreen: React.FC<WeeklyRetroScreenProps> = ({
   dailyLogs,
   streak,
   weeklyRetroNotes,
+  todos = [],
   onSaveRetroNote,
+  onAcknowledgeSittingTodo,
   onOpenRoadmap,
 }) => {
   const currentWeekKey = getWeekKey();
   const [note, setNote] = useState(weeklyRetroNotes[currentWeekKey] || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const sittingTodos = getSittingTodosOver7Days(todos, currentWeekKey);
 
   useEffect(() => {
     setNote(weeklyRetroNotes[currentWeekKey] || '');
@@ -171,6 +177,77 @@ export const WeeklyRetroScreen: React.FC<WeeklyRetroScreenProps> = ({
           ))}
         </div>
       </div>
+
+      {/* 7+ Days Sitting To-Dos: Gentle Reassessment */}
+      {sittingTodos.length > 0 && (
+        <div className="bg-white dark:bg-warm-850 rounded-xl p-3.5 border border-warm-200/90 dark:border-warm-800 shadow-soft space-y-2.5">
+          <div className="flex items-center gap-2 text-warm-900 dark:text-warm-100">
+            <Clock className="w-4 h-4 text-warm-500" />
+            <h2 className="text-xs font-bold uppercase tracking-wider">
+              Sitting a while — still relevant?
+            </h2>
+          </div>
+          <p className="text-[11px] text-warm-500 dark:text-warm-400">
+            These tasks have been here for 7+ days. Priorities change naturally — keep, demote to C, mark done, or let go with zero guilt.
+          </p>
+
+          <div className="space-y-2 pt-1">
+            {sittingTodos.map((item) => (
+              <div
+                key={item.id}
+                className="p-2.5 rounded-xl bg-warm-50 dark:bg-warm-900 border border-warm-200/70 dark:border-warm-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase shrink-0 bg-warm-200 dark:bg-warm-800 text-warm-800 dark:text-warm-200 border-warm-300 dark:border-warm-700">
+                    {item.priority}
+                  </span>
+                  <span className="text-xs font-medium text-warm-800 dark:text-warm-200 truncate">
+                    {item.text}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center text-[11px]">
+                  {onAcknowledgeSittingTodo && (
+                    <>
+                      <button
+                        onClick={() => onAcknowledgeSittingTodo(item.id, 'keep')}
+                        title="Keep as is for now"
+                        className="px-2 py-1 rounded-md bg-warm-200/70 hover:bg-warm-200 dark:bg-warm-800 dark:hover:bg-warm-750 text-warm-700 dark:text-warm-300 transition-colors"
+                      >
+                        Still needed
+                      </button>
+                      {item.priority !== 'C' && (
+                        <button
+                          onClick={() => onAcknowledgeSittingTodo(item.id, 'demote')}
+                          title="Demote to C (nice to have)"
+                          className="px-2 py-1 rounded-md bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/50 dark:hover:bg-sky-900/60 text-sky-800 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/60 transition-colors"
+                        >
+                          Demote to C
+                        </button>
+                      )}
+                      <button
+                        onClick={() => onAcknowledgeSittingTodo(item.id, 'done')}
+                        title="Mark done"
+                        className="px-2 py-1 rounded-md bg-focus-50 hover:bg-focus-100 dark:bg-focus-900/40 text-focus-700 dark:text-focus-300 border border-focus-200/60 dark:border-focus-800/60 transition-colors flex items-center gap-0.5"
+                      >
+                        <Check className="w-3 h-3" />
+                        <span>Done</span>
+                      </button>
+                      <button
+                        onClick={() => onAcknowledgeSittingTodo(item.id, 'delete')}
+                        title="Let go guilt-free"
+                        className="px-2 py-1 rounded-md text-warm-400 hover:text-red-500 hover:bg-warm-100 dark:hover:bg-warm-800 transition-colors"
+                      >
+                        Let go
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Free-text box: What do I want to change next week? */}
       <div className="bg-white dark:bg-warm-850 rounded-xl p-3 border border-warm-200/90 dark:border-warm-800 shadow-soft">

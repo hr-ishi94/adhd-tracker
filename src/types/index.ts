@@ -31,11 +31,25 @@ export type ReviewWhyReason =
   | "low_energy" 
   | null;
 
+export type TodoPriority = "A" | "B" | "C";
+export type TodoStatus = "open" | "done";
+
+export type TodoItem = {
+  id: string;
+  text: string;
+  priority: TodoPriority;
+  status: TodoStatus;
+  createdDate: string; // ISO date string (YYYY-MM-DD)
+  completedDate?: string | null; // ISO date string (YYYY-MM-DD) when completed
+  lastNudgeWeekKey?: string | null; // e.g. "2026-W38" to prevent repeated retro nagging
+};
+
 export type DailyLog = {
   date: string; // "YYYY-MM-DD"
   priority: string;
   blockStatus: Record<string, BlockStatus>; // keyed by RoutineBlock.id
   blockDetails?: Record<string, BlockLogEntry>; // P0 #2: track autoResolved flag
+  completedTodos?: TodoItem[]; // Snapshot of todos completed on this date
   reviewWhatGotDone: string;
   reviewWhatSlipped: string;
   reviewWhy: ReviewWhyReason;
@@ -89,6 +103,7 @@ export type AppData = {
   routineSets: RoutineSet[]; // P1 #3: day-of-week routine sets
   routineSchedule: RoutineSchedule; // mapping day -> routineSetId
   sprints: Sprint[]; // P1 #5: 2-week sprint roadmap
+  todos: TodoItem[]; // Additional To-Dos with ABC priority (max 3 per letter)
   dailyLogs: Record<string, DailyLog>;
   brainDump: BrainDumpItem[];
   streak: Streak;
@@ -98,3 +113,4 @@ export type AppData = {
 };
 
 export type ScreenTab = "today" | "inbox" | "review" | "retro" | "settings" | "roadmap";
+

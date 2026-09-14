@@ -6,7 +6,9 @@ import type {
   BlockStatus, 
   DailyLog, 
   BrainDumpItem, 
-  Streak 
+  Streak,
+  TodoItem,
+  TodoPriority
 } from './types';
 import { 
   loadAppData, 
@@ -16,10 +18,11 @@ import {
   updateStreakAfterBlockCompletion, 
   INITIAL_APP_DATA,
   getRoutineBlocksForDate,
-  checkAndRunAutoWeeklyBackup
+  checkAndRunAutoWeeklyBackup,
+  canAddTodo
 } from './lib/storage';
 import { autoResolveMissedBlocks } from './lib/autoResolve';
-import { getCurrentAndNextBlock } from './lib/time';
+import { getCurrentAndNextBlock, getWeekKey } from './lib/time';
 import { notifications } from './lib/notifications';
 import { Navigation } from './components/Navigation';
 import { BrainDumpFAB } from './components/BrainDumpFAB';
@@ -40,6 +43,7 @@ interface UndoState {
   blockName: string;
   action: BlockStatus;
   previousStreak: Streak;
+  isTodo?: boolean;
 }
 
 export function App() {
@@ -170,6 +174,7 @@ export function App() {
         blockName: targetBlock?.name || 'Routine Block',
         action: status,
         previousStreak: { ...appData.streak },
+        isTodo: false,
       });
     }
 
@@ -209,9 +214,115 @@ export function App() {
     });
   };
 
-  // Undo block completion or skip
+  // Additional To-Dos Handlers (ABC Psychologist System, capped at 3 per tier)
+  const handleAddTodo = (text: string, priority: TodoPriority): boolean => {
+    if (!canAddTodo(appData.todos, priority)) {
+      return false;
+    }
+    const newTodo: TodoItem = {
+      id: `todo-${Date.now()}`,
+      text: text.trim(),
+      priority,
+      status: 'open',
+      createdDate: todayStr,
+    };
+    setAppData((prev) => ({
+      ...prev,
+      todos: [newTodo, ...prev.todos],
+    }));
+    return true;
+  };
+
+  const handleToggleTodo = (id: string) => {
+    const targetTodo = appData.todos.find((t) => t.id === id);
+    if (!targetTodo) return;
+
+    const willBeDone = targetTodo.status !== 'done';
+
+    if (willBeDone) {
+      setUndoState({
+        blockId: id,
+        blockName: targetTodo.text,
+        action: 'done',
+        previousStreak: { ...appData.streak },
+        isTodo: true,
+      });
+    }
+
+    setAppData((prev) => ({
+      ...prev,
+      todos: prev.todos.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              status: willBeDone ? 'done' : 'open',
+              completedDate: willBeDone ? todayStr : null,
+            }
+          : t
+      ),
+    }));
+  };
+
+  const handleChangeTodoPriority = (id: string, newPriority: TodoPriority) => {
+    if (!canAddTodo(appData.todos, newPriority)) {
+      return;
+    }
+    setAppData((prev) => ({
+      ...prev,
+      todos: prev.todos.map((t) => (t.id === id ? { ...t, priority: newPriority } : t)),
+    }));
+  };
+
+  const handleDeleteTodo = (id: string) => {
+    setAppData((prev) => ({
+      ...prev,
+      todos: prev.todos.filter((t) => t.id !== id),
+    }));
+  };
+
+  const handleAcknowledgeSittingTodo = (
+    id: string,
+    action: 'keep' | 'demote' | 'done' | 'delete'
+  ) => {
+    const currentWeekKey = getWeekKey(currentTime);
+    if (action === 'delete') {
+      handleDeleteTodo(id);
+      return;
+    }
+
+    setAppData((prev) => ({
+      ...prev,
+      todos: prev.todos.map((t) => {
+        if (t.id !== id) return t;
+        if (action === 'keep') {
+          return { ...t, lastNudgeWeekKey: currentWeekKey };
+        }
+        if (action === 'demote') {
+          return { ...t, priority: 'C', lastNudgeWeekKey: currentWeekKey };
+        }
+        if (action === 'done') {
+          return { ...t, status: 'done', completedDate: todayStr, lastNudgeWeekKey: currentWeekKey };
+        }
+        return t;
+      }),
+    }));
+  };
+
+  // Undo completion of block or to-do
   const handleUndo = () => {
     if (!undoState) return;
+
+    if (undoState.isTodo) {
+      setAppData((prev) => ({
+        ...prev,
+        todos: prev.todos.map((t) =>
+          t.id === undoState.blockId ? { ...t, status: 'open', completedDate: null } : t
+        ),
+      }));
+      setUndoState(null);
+      return;
+    }
+
     const { blockId, previousStreak } = undoState;
 
     setAppData((prev) => {
@@ -276,17 +387,30 @@ export function App() {
   };
 
   const handleConvertDumpToTask = (item: BrainDumpItem) => {
-    // 1. Set as Today's One Thing
+    // Set as Today's One Thing
     handleUpdatePriority(item.text);
-    // 2. Mark converted
     setAppData((prev) => ({
       ...prev,
       brainDump: prev.brainDump.map((i) =>
         i.id === item.id ? { ...i, convertedToTask: true } : i
       ),
     }));
-    // 3. Take user to Today screen to see their new focus
     setCurrentTab('today');
+  };
+
+  const handleConvertToTodo = (item: BrainDumpItem, priority: TodoPriority): boolean => {
+    const added = handleAddTodo(item.text, priority);
+    if (added) {
+      setAppData((prev) => ({
+        ...prev,
+        brainDump: prev.brainDump.map((i) =>
+          i.id === item.id ? { ...i, convertedToTask: true } : i
+        ),
+      }));
+      setCurrentTab('today');
+      return true;
+    }
+    return false;
   };
 
   const handleClearAllDoneDumps = () => {
@@ -365,17 +489,24 @@ export function App() {
             dailyLog={dailyLog}
             currentBlock={currentBlock}
             nextBlock={nextBlock}
+            todos={appData.todos}
             onUpdatePriority={handleUpdatePriority}
             onMarkBlockStatus={handleMarkBlockStatus}
             onOpenBreakdown={(block) => setBreakdownBlock(block)}
+            onToggleTodo={handleToggleTodo}
+            onAddTodo={handleAddTodo}
+            onChangeTodoPriority={handleChangeTodoPriority}
+            onDeleteTodo={handleDeleteTodo}
           />
         )}
 
         {currentTab === 'inbox' && (
           <InboxScreen
             items={appData.brainDump}
+            todos={appData.todos}
             onDeleteItem={handleDeleteBrainDump}
-            onConvertToTask={handleConvertDumpToTask}
+            onConvertToTodo={handleConvertToTodo}
+            onSetAsPrimaryFocus={handleConvertDumpToTask}
             onClearAllDone={handleClearAllDoneDumps}
           />
         )}
@@ -394,7 +525,9 @@ export function App() {
             dailyLogs={appData.dailyLogs}
             streak={appData.streak}
             weeklyRetroNotes={appData.weeklyRetroNotes}
+            todos={appData.todos}
             onSaveRetroNote={handleSaveRetroNote}
+            onAcknowledgeSittingTodo={handleAcknowledgeSittingTodo}
             onOpenRoadmap={() => setCurrentTab('roadmap')}
           />
         )}
