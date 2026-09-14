@@ -177,6 +177,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             Customize your routine, reminders & manual safety net
           </p>
         </div>
+        <img 
+          src="/logo.png" 
+          alt="ADHD Tracker Logo" 
+          className="w-10 h-10 rounded-xl object-contain shadow-soft border border-warm-200/60 dark:border-warm-800" 
+        />
       </div>
 
       {statusMessage && (

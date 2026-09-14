@@ -68,8 +68,23 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
 
   return (
     <div className="flex-1 flex flex-col justify-between max-w-md mx-auto w-full px-4 pt-3 pb-24 safe-top">
-      {/* Top Section: Progress strip and Priority Card */}
+      {/* Top Section: Brand Header, Progress strip and Priority Card */}
       <div className="w-full">
+        <div className="flex items-center justify-between px-1 mb-2">
+          <div className="flex items-center gap-2.5">
+            <img 
+              src="/logo.png" 
+              alt="ADHD Tracker Logo" 
+              className="w-7 h-7 rounded-lg object-contain shadow-soft border border-warm-200/60 dark:border-warm-800" 
+            />
+            <span className="font-bold text-sm text-warm-900 dark:text-warm-100 tracking-tight">
+              Daily Focus
+            </span>
+          </div>
+          <span className="text-[11px] font-medium text-warm-400">
+            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+          </span>
+        </div>
         <ProgressStrip blocks={routineBlocks} dailyLog={dailyLog} />
         <PriorityCard
           priority={dailyLog.priority}
