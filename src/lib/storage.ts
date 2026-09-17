@@ -8,7 +8,9 @@ import type {
   Sprint, 
   DayOfWeek,
   TodoItem,
-  TodoPriority
+  TodoPriority,
+  HabitMilestone,
+  HabitQuitTracker
 } from '../types';
 
 export const STORAGE_KEY = 'focus-app-data';
@@ -154,53 +156,196 @@ export const DEFAULT_SPRINTS: Sprint[] = [
   {
     id: 'sprint-1',
     name: 'Next.js Full Stack Project & System Architecture',
+    description: 'Build production-ready web application with App Router, Server Actions, and Auth',
+    category: 'Frontend & Fullstack',
     durationWeeks: 2,
     startDate: new Date().toISOString().slice(0, 10),
     status: 'active',
+    topics: [
+      { id: 't-1-1', title: 'App Router vs Pages Router deep dive', completed: true },
+      { id: 't-1-2', title: 'Server Components & Streaming SSR', completed: true },
+      { id: 't-1-3', title: 'Server Actions & Form Validation with Zod', completed: false },
+      { id: 't-1-4', title: 'Database connection & Prisma/Drizzle ORM', completed: false },
+      { id: 't-1-5', title: 'Production deployment to Vercel', completed: false },
+    ],
   },
   {
     id: 'sprint-2',
     name: 'Django REST Framework & Microservices',
+    description: 'Python backend engineering, RESTful APIs, Token Authentication, and PostgreSQL',
+    category: 'Backend',
     durationWeeks: 2,
     startDate: null,
     status: 'upcoming',
+    topics: [
+      { id: 't-2-1', title: 'Django Models, Migrations & QuerySet optimization', completed: false },
+      { id: 't-2-2', title: 'DRF Serializers & ViewSets', completed: false },
+      { id: 't-2-3', title: 'JWT Authentication & Permission classes', completed: false },
+      { id: 't-2-4', title: 'Celery background workers & Redis caching', completed: false },
+    ],
   },
   {
     id: 'sprint-3',
     name: 'DSA Mastery: Trees, Graphs & Dynamic Programming',
+    description: 'Coding interview patterns and problem solving intuition',
+    category: 'Algorithms',
     durationWeeks: 2,
     startDate: null,
     status: 'upcoming',
+    topics: [
+      { id: 't-3-1', title: 'Binary Search & Two Pointers patterns', completed: false },
+      { id: 't-3-2', title: 'Tree traversals & Lowest Common Ancestor', completed: false },
+      { id: 't-3-3', title: 'Graph BFS/DFS, Dijkstra & Topological Sort', completed: false },
+      { id: 't-3-4', title: '1D and 2D Dynamic Programming classics', completed: false },
+    ],
   },
   {
     id: 'sprint-4',
     name: 'High-Scale System Design & Database Sharding',
+    description: 'Designing distributed systems, caching layers, and database partitioning',
+    category: 'Architecture',
     durationWeeks: 2,
     startDate: null,
     status: 'upcoming',
+    topics: [
+      { id: 't-4-1', title: 'Load balancing, CDN, and DNS routing', completed: false },
+      { id: 't-4-2', title: 'CAP Theorem & Eventual Consistency', completed: false },
+      { id: 't-4-3', title: 'Database Sharding, Replication & Read Replicas', completed: false },
+      { id: 't-4-4', title: 'Rate Limiter & Notification Service Design', completed: false },
+    ],
   },
   {
     id: 'sprint-5',
     name: 'AI Agent Integrations & Real-Time WebSockets',
+    description: 'LLM tool calling, structured outputs, and real-time streaming architectures',
+    category: 'AI & Systems',
     durationWeeks: 2,
     startDate: null,
     status: 'upcoming',
-  },
-  {
-    id: 'sprint-6',
-    name: 'Portfolio Polish, CI/CD & Production Hardening',
-    durationWeeks: 2,
-    startDate: null,
-    status: 'upcoming',
-  },
-  {
-    id: 'sprint-7',
-    name: 'UAE Technical Interview Prep & Application Blitz',
-    durationWeeks: 2,
-    startDate: null,
-    status: 'upcoming',
+    topics: [
+      { id: 't-5-1', title: 'Function calling & agent loops with Gemini/Claude', completed: false },
+      { id: 't-5-2', title: 'RAG architecture with Vector embeddings', completed: false },
+      { id: 't-5-3', title: 'WebSockets & Server-Sent Events (SSE) streaming', completed: false },
+    ],
   },
 ];
+
+export const HABIT_MILESTONES: HabitMilestone[] = [
+  {
+    id: 'm-2h',
+    hours: 2,
+    title: 'First Step: Pulse Stabilizing',
+    badge: '🌱',
+    rewardDescription: 'The First Clean Break',
+    benefitDetail: 'Heart rate and blood pressure start returning to normal. Physical craving peaks are acknowledged without giving in.',
+  },
+  {
+    id: 'm-4h',
+    hours: 4,
+    title: 'Craving Surfer',
+    badge: '🌊',
+    rewardDescription: 'Urge Surfing Master',
+    benefitDetail: 'Blood oxygen levels climb. You have interrupted the automatic subconscious habit loop!',
+  },
+  {
+    id: 'm-8h',
+    hours: 8,
+    title: 'Oxygen Revival',
+    badge: '💨',
+    rewardDescription: 'Clear Breath Badge',
+    benefitDetail: 'Excess carbon monoxide and mental fog drop significantly. Brain oxygenation reaches optimal clarity.',
+  },
+  {
+    id: 'm-12h',
+    hours: 12,
+    title: 'Half-Day Hero',
+    badge: '☀️',
+    rewardDescription: '12-Hour Bronze Shield',
+    benefitDetail: 'A full half day! Cellular detox is active. Your dopamine baseline begins its very first reset.',
+  },
+  {
+    id: 'm-24h',
+    hours: 24,
+    title: 'One Full Day Free',
+    badge: '🏆',
+    rewardDescription: '24-Hour Golden Trophy',
+    benefitDetail: '24 hours without the habit! Your acute stress and anxiety start plateauing. A massive personal win!',
+  },
+  {
+    id: 'm-48h',
+    hours: 48,
+    title: 'Two Days Strong',
+    badge: '🔥',
+    rewardDescription: 'Nerve Restoration Medal',
+    benefitDetail: 'Taste and sensory receptors begin regeneration. Physical acute chemical withdrawal peaks and begins subsiding.',
+  },
+  {
+    id: 'm-3d',
+    hours: 72,
+    title: 'The 72h Peak Beaten',
+    badge: '⚡',
+    rewardDescription: 'Peak Conqueror Star',
+    benefitDetail: '72 hours reached! 100% of the primary toxic chemical or compulsive cue is purged from your body. The hardest peak is behind you!',
+  },
+  {
+    id: 'm-5d',
+    hours: 120,
+    title: 'Working Week Victory',
+    badge: '🛡️',
+    rewardDescription: 'Focus Defender',
+    benefitDetail: 'Your prefrontal cortex (executive function) is rebuilding synaptic strength. Willpower stamina is now 3x higher than Day 1.',
+  },
+  {
+    id: 'm-7d',
+    hours: 168,
+    title: 'One Week Champion!',
+    badge: '🌟',
+    rewardDescription: '1-Week Diamond Ribbon',
+    benefitDetail: 'One whole week free! Sleep architecture (deep REM cycles) deeply recovers. Psychological independence is blooming.',
+  },
+  {
+    id: 'm-10d',
+    hours: 240,
+    title: 'Double-Digit Dynamo',
+    badge: '🚀',
+    rewardDescription: 'Momentum Engine',
+    benefitDetail: 'Habit triggers that used to spark automatic reach-for reactions are fading. Emotional regulation is stabilizing.',
+  },
+  {
+    id: 'm-14d',
+    hours: 336,
+    title: 'Two Full Weeks Clean',
+    badge: '👑',
+    rewardDescription: 'Crown of Resilience',
+    benefitDetail: 'Dopamine D2 receptor density is steadily up-regulating! Natural joy from learning, food, and daily life returns.',
+  },
+  {
+    id: 'm-21d',
+    hours: 504,
+    title: 'Neural Rewiring Done',
+    badge: '🧠',
+    rewardDescription: 'Neuro-Architect Badge',
+    benefitDetail: '21 days: The neurological 3-week habit loop transition is complete. The old neural pathway is atrophying.',
+  },
+  {
+    id: 'm-30d',
+    hours: 720,
+    title: '30-Day Legend!',
+    badge: '🎖️',
+    rewardDescription: 'Grandmaster Pomo-Dino',
+    benefitDetail: 'A full 30-day transformation! You have proven to your ADHD brain that consistency and change are 100% achievable.',
+  },
+];
+
+export const DEFAULT_HABIT_TRACKER: HabitQuitTracker = {
+  id: 'habit-primary',
+  habitName: 'Bad Habit / Smoking / Doomscrolling',
+  quitDate: new Date(Date.now() - 3 * 3600 * 1000).toISOString(), // defaults to 3h ago so first milestone is unlocked to motivate!
+  reason: 'To regain focus, mental clarity, and rebuild my dopamine baseline for learning.',
+  resetsCount: 0,
+  cravingsResisted: 3,
+  unlockedMilestones: ['m-2h'],
+};
 
 export const DEFAULT_STREAK: Streak = {
   current: 0,
@@ -210,7 +355,7 @@ export const DEFAULT_STREAK: Streak = {
 };
 
 export const INITIAL_APP_DATA: AppData = {
-  version: 2,
+  version: 3,
   routineBlocks: DEFAULT_WEEKDAY_BLOCKS,
   routineSets: DEFAULT_ROUTINE_SETS,
   routineSchedule: DEFAULT_ROUTINE_SCHEDULE,
@@ -224,8 +369,18 @@ export const INITIAL_APP_DATA: AppData = {
     notificationsEnabled: false,
     soundEnabled: true,
     theme: 'system',
+    pomodoro: {
+      focusMinutes: 25,
+      restMinutes: 5,
+    },
   },
   lastAutoExportDate: null,
+  habitTracker: DEFAULT_HABIT_TRACKER,
+  pomodoroStats: {
+    todayCompleted: 0,
+    lastDate: getTodayDateString(),
+    totalCompleted: 0,
+  },
 };
 
 export function getTodayDateString(d: Date = new Date()): string {
@@ -289,11 +444,25 @@ export function loadAppData(): AppData {
     }
 
     const routineSchedule = parsed.routineSchedule || DEFAULT_ROUTINE_SCHEDULE;
-    const sprints = parsed.sprints && parsed.sprints.length > 0 ? parsed.sprints : DEFAULT_SPRINTS;
+    let sprints = parsed.sprints && parsed.sprints.length > 0 ? parsed.sprints : DEFAULT_SPRINTS;
+    // Ensure all sprints have a topics array
+    sprints = sprints.map((s, idx) => {
+      if (!s.topics || s.topics.length === 0) {
+        const defaultMatch = DEFAULT_SPRINTS.find((ds) => ds.id === s.id) || DEFAULT_SPRINTS[idx];
+        return {
+          ...s,
+          description: s.description || defaultMatch?.description || '',
+          category: s.category || defaultMatch?.category || 'General',
+          topics: defaultMatch?.topics || [],
+        };
+      }
+      return s;
+    });
+
     const todos = Array.isArray(parsed.todos) ? parsed.todos : [];
 
     const data: AppData = {
-      version: 2,
+      version: 3,
       routineBlocks: parsed.routineBlocks || DEFAULT_WEEKDAY_BLOCKS,
       routineSets,
       routineSchedule,
@@ -307,8 +476,15 @@ export function loadAppData(): AppData {
         notificationsEnabled: parsed.settings?.notificationsEnabled ?? false,
         soundEnabled: parsed.settings?.soundEnabled ?? true,
         theme: parsed.settings?.theme ?? 'system',
+        pomodoro: parsed.settings?.pomodoro || { focusMinutes: 25, restMinutes: 5 },
       },
       lastAutoExportDate: parsed.lastAutoExportDate || null,
+      habitTracker: parsed.habitTracker || DEFAULT_HABIT_TRACKER,
+      pomodoroStats: parsed.pomodoroStats || {
+        todayCompleted: 0,
+        lastDate: getTodayDateString(),
+        totalCompleted: 0,
+      },
     };
 
     return data;
@@ -441,7 +617,7 @@ export function importAppDataJSON(jsonStr: string): { success: boolean; data?: A
     }
 
     const cleanData: AppData = {
-      version: parsed.version || 2,
+      version: parsed.version || 3,
       routineBlocks: Array.isArray(parsed.routineBlocks) ? parsed.routineBlocks : DEFAULT_WEEKDAY_BLOCKS,
       routineSets: Array.isArray(parsed.routineSets) ? parsed.routineSets : DEFAULT_ROUTINE_SETS,
       routineSchedule: parsed.routineSchedule || DEFAULT_ROUTINE_SCHEDULE,
@@ -453,6 +629,12 @@ export function importAppDataJSON(jsonStr: string): { success: boolean; data?: A
       weeklyRetroNotes: parsed.weeklyRetroNotes || {},
       settings: parsed.settings || { notificationsEnabled: false, soundEnabled: true, theme: 'system' },
       lastAutoExportDate: parsed.lastAutoExportDate || null,
+      habitTracker: parsed.habitTracker || DEFAULT_HABIT_TRACKER,
+      pomodoroStats: parsed.pomodoroStats || {
+        todayCompleted: 0,
+        lastDate: getTodayDateString(),
+        totalCompleted: 0,
+      },
     };
 
     saveAppData(cleanData);

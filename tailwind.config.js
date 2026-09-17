@@ -9,16 +9,36 @@ export default {
     extend: {
       colors: {
         focus: {
-          50: '#fffbeb',
-          100: '#fef3c7',
-          200: '#fde68a',
-          300: '#fcd34d',
-          400: '#fbbf24',
-          500: '#f59e0b',
-          600: '#d97706', // primary confident accent for "Right Now"
-          700: '#b45309',
-          800: '#92400e',
-          900: '#78350f',
+          50: '#fff5f1',
+          100: '#ffe8df',
+          200: '#ffd3c2',
+          300: '#fca78e',
+          400: '#fa8060',
+          500: '#f26543',
+          600: '#e14a27', // Pomo-Dino primary brand coral
+          700: '#bc381b',
+          800: '#9b3019',
+          900: '#7f2c1a',
+        },
+        dino: {
+          coral: '#f26543',
+          tummy: '#ffd3c2',
+          tomato: '#d63b2f',
+          leaf: '#549646',
+          rest: '#407835',
+          navy: '#547290',
+          lightMint: '#eaf4ee',
+          cream: '#fdfcf9',
+        },
+        leaf: {
+          50: '#f2f8f0',
+          100: '#e2f0dc',
+          200: '#c5e2bc',
+          300: '#9dcd91',
+          400: '#6fb260',
+          500: '#549646',
+          600: '#407835',
+          700: '#345e2c',
         },
         warm: {
           50: '#FAF9F6',

@@ -82,6 +82,12 @@ export type RoutineSet = {
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export type RoutineSchedule = Record<DayOfWeek, string>; // day -> routineSetId
 
+export type LearningTopic = {
+  id: string;
+  title: string;
+  completed: boolean;
+};
+
 export type Sprint = {
   id: string;
   name: string;
@@ -89,12 +95,46 @@ export type Sprint = {
   startDate: string | null; // ISO date string or null
   status: "upcoming" | "active" | "done";
   note?: string;
+  description?: string;
+  category?: string;
+  topics?: LearningTopic[];
+};
+
+export type HabitMilestone = {
+  id: string;
+  hours: number;
+  title: string;
+  badge: string;
+  rewardDescription: string;
+  benefitDetail: string;
+};
+
+export type HabitQuitTracker = {
+  id: string;
+  habitName: string;
+  quitDate: string; // ISO string
+  reason: string;
+  resetsCount: number;
+  cravingsResisted: number;
+  unlockedMilestones: string[];
+};
+
+export type PomodoroSettings = {
+  focusMinutes: number;
+  restMinutes: number;
+};
+
+export type PomodoroStats = {
+  todayCompleted: number;
+  lastDate: string;
+  totalCompleted: number;
 };
 
 export type AppSettings = {
   notificationsEnabled: boolean;
   soundEnabled: boolean;
   theme: "system" | "light" | "dark";
+  pomodoro?: PomodoroSettings;
 };
 
 export type AppData = {
@@ -102,7 +142,7 @@ export type AppData = {
   routineBlocks: RoutineBlock[]; // kept for backwards-compatibility
   routineSets: RoutineSet[]; // P1 #3: day-of-week routine sets
   routineSchedule: RoutineSchedule; // mapping day -> routineSetId
-  sprints: Sprint[]; // P1 #5: 2-week sprint roadmap
+  sprints: Sprint[]; // P1 #5: 2-week sprint roadmap & dynamic learning curve
   todos: TodoItem[]; // Additional To-Dos with ABC priority (max 3 per letter)
   dailyLogs: Record<string, DailyLog>;
   brainDump: BrainDumpItem[];
@@ -110,7 +150,19 @@ export type AppData = {
   weeklyRetroNotes: Record<string, string>; // "YYYY-Wxx" -> note
   settings: AppSettings;
   lastAutoExportDate: string | null; // P0 #1: auto weekly backup
+  habitTracker?: HabitQuitTracker;
+  pomodoroStats?: PomodoroStats;
 };
 
-export type ScreenTab = "today" | "inbox" | "review" | "retro" | "settings" | "roadmap";
+export type ScreenTab = 
+  | "today" 
+  | "pomodoro" 
+  | "learning" 
+  | "habits" 
+  | "more" 
+  | "inbox" 
+  | "review" 
+  | "retro" 
+  | "settings" 
+  | "roadmap";
 

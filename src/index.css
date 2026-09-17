@@ -9,7 +9,7 @@
     --color-text-main: #1C1917;
     --color-text-muted: #78716C;
     --color-border: #E7E5E4;
-    --color-accent: #D97706;
+    --color-accent: #e14a27;
   }
 
   .dark {
@@ -18,7 +18,7 @@
     --color-text-main: #F5F5F4;
     --color-text-muted: #A8A29E;
     --color-border: #292524;
-    --color-accent: #F59E0B;
+    --color-accent: #f26543;
   }
 
   html, body {
@@ -47,7 +47,7 @@
 
 /* Accessible focus ring */
 :focus-visible {
-  outline: 2px solid #D97706;
+  outline: 2px solid #e14a27;
   outline-offset: 2px;
 }
 

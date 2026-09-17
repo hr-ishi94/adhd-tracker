@@ -63,47 +63,47 @@ export const AdditionalTodosSection: React.FC<AdditionalTodosSectionProps> = ({
     <div className="space-y-1.5 pt-0.5">
       {/* Empty State: Clear, inviting card when no to-dos exist yet */}
       {!topAItem && openTodos.length === 0 && !isExpanded && (
-        <div className="bg-white/80 dark:bg-warm-850/80 rounded-xl p-2.5 border border-dashed border-warm-300 dark:border-warm-700 shadow-soft flex items-center justify-between transition-all">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-300/70 dark:border-amber-800">
+        <div className="bg-white/80 dark:bg-warm-850/80 rounded-2xl p-3 sm:p-3.5 border border-dashed border-warm-300 dark:border-warm-700 shadow-soft flex items-center justify-between transition-all">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xs font-black text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-300/70 dark:border-amber-800">
               ABC
             </span>
-            <span className="text-xs font-semibold text-warm-700 dark:text-warm-300">
+            <span className="text-xs sm:text-sm font-bold text-warm-700 dark:text-warm-300">
               Additional To-Dos
             </span>
-            <span className="text-[10px] text-warm-400 dark:text-warm-500">
+            <span className="text-xs text-warm-400 dark:text-warm-500">
               (Ad-hoc tasks)
             </span>
           </div>
 
           <button
             onClick={() => setIsExpanded(true)}
-            className="flex items-center gap-1 text-xs font-semibold text-focus-700 dark:text-focus-300 bg-focus-50 hover:bg-focus-100 dark:bg-focus-900/40 px-2.5 py-1 rounded-lg border border-focus-200/70 dark:border-focus-800/70 transition-colors"
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-focus-700 dark:text-focus-300 bg-focus-50 hover:bg-focus-100 dark:bg-focus-900/40 px-3 py-1.5 rounded-xl border border-focus-200/70 dark:border-focus-800/70 transition-colors"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-4 h-4" />
             <span>Add To-Do</span>
           </button>
         </div>
       )}
 
-      {/* Top A item: Single line, small, non-competing with the main routine block */}
+      {/* Top A item: Single line, readable, comfortable on mobile */}
       {topAItem && (
-        <div className="bg-white dark:bg-warm-850 rounded-xl px-3 py-2 border border-warm-200/90 dark:border-warm-800 shadow-soft transition-all">
-          <div className="flex items-center justify-between gap-2.5">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-300/70 dark:border-amber-800 shrink-0">
+        <div className="bg-white dark:bg-warm-850 rounded-2xl px-3.5 py-2.5 border border-warm-200/90 dark:border-warm-800 shadow-soft transition-all">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <span className="text-xs font-black text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-300/70 dark:border-amber-800 shrink-0">
                 A
               </span>
-              <span className="text-xs sm:text-sm font-medium text-warm-800 dark:text-warm-200 truncate">
+              <span className="text-sm sm:text-base font-semibold text-warm-800 dark:text-warm-100 truncate">
                 {topAItem.text}
               </span>
             </div>
 
             <button
               onClick={() => onToggleTodo(topAItem.id)}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-focus-50 hover:bg-focus-100 dark:bg-focus-900/30 dark:hover:bg-focus-900/50 text-focus-700 dark:text-focus-300 font-medium text-xs shrink-0 transition-colors border border-focus-200/60 dark:border-focus-800/60"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-focus-50 hover:bg-focus-100 dark:bg-focus-900/30 dark:hover:bg-focus-900/50 text-focus-700 dark:text-focus-300 font-bold text-xs sm:text-sm shrink-0 transition-colors border border-focus-200/60 dark:border-focus-800/60"
             >
-              <Check className="w-3 h-3" />
+              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>Done</span>
             </button>
           </div>
@@ -115,7 +115,7 @@ export const AdditionalTodosSection: React.FC<AdditionalTodosSectionProps> = ({
         <div className="flex items-center justify-between px-1">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="inline-flex items-center gap-1 text-[11px] font-semibold text-warm-600 hover:text-warm-900 dark:text-warm-400 dark:hover:text-warm-200 transition-colors py-0.5"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-warm-600 hover:text-warm-900 dark:text-warm-400 dark:hover:text-warm-200 transition-colors py-1"
           >
             <span>
               {isExpanded

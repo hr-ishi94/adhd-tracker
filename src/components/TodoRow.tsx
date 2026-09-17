@@ -27,39 +27,39 @@ export const TodoRow: React.FC<TodoRowProps> = ({
 
   return (
     <div
-      className={`group flex items-center justify-between gap-2 transition-all ${
+      className={`group flex items-center justify-between gap-2.5 transition-all ${
         isCompact
-          ? 'py-1 px-1'
-          : 'py-2 px-2.5 rounded-xl bg-warm-50/70 dark:bg-warm-900/60 border border-warm-200/60 dark:border-warm-800/60 hover:bg-white dark:hover:bg-warm-850'
+          ? 'py-1.5 px-1'
+          : 'py-2.5 px-3 rounded-2xl bg-warm-50/70 dark:bg-warm-900/60 border border-warm-200/60 dark:border-warm-800/60 hover:bg-white dark:hover:bg-warm-850'
       }`}
     >
-      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
         {/* 1-Tap Done checkbox */}
         <button
           onClick={() => onToggleDone(todo.id)}
           aria-label={isDone ? 'Mark to-do pending' : 'Mark to-do done'}
-          className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all shrink-0 ${
+          className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-all shrink-0 ${
             isDone
-              ? 'bg-focus-600 border-focus-600 text-white'
+              ? 'bg-focus-600 border-focus-600 text-white shadow-xs'
               : 'border-warm-300 dark:border-warm-600 hover:border-focus-500 text-transparent hover:text-focus-600 dark:hover:text-focus-400'
           }`}
         >
-          <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+          <Check className="w-4 h-4 stroke-[2.5]" />
         </button>
 
         {/* Priority Badge */}
         <span
-          className={`text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase shrink-0 ${badgeColor}`}
+          className={`text-xs font-black px-2 py-0.5 rounded-md border uppercase shrink-0 ${badgeColor}`}
         >
           {todo.priority}
         </span>
 
         {/* Text */}
         <span
-          className={`text-xs sm:text-sm font-medium truncate ${
+          className={`text-sm sm:text-base font-medium truncate ${
             isDone
               ? 'line-through text-warm-400 dark:text-warm-500'
-              : 'text-warm-800 dark:text-warm-200'
+              : 'text-warm-800 dark:text-warm-100 font-semibold'
           }`}
         >
           {todo.text}

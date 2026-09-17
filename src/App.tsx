@@ -8,7 +8,8 @@ import type {
   BrainDumpItem, 
   Streak,
   TodoItem,
-  TodoPriority
+  TodoPriority,
+  HabitQuitTracker
 } from './types';
 import { 
   loadAppData, 
@@ -19,7 +20,8 @@ import {
   INITIAL_APP_DATA,
   getRoutineBlocksForDate,
   checkAndRunAutoWeeklyBackup,
-  canAddTodo
+  canAddTodo,
+  DEFAULT_HABIT_TRACKER
 } from './lib/storage';
 import { autoResolveMissedBlocks } from './lib/autoResolve';
 import { getCurrentAndNextBlock, getWeekKey } from './lib/time';
@@ -36,6 +38,9 @@ import { EveningReviewScreen } from './screens/EveningReviewScreen';
 import { WeeklyRetroScreen } from './screens/WeeklyRetroScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { RoadmapScreen } from './screens/RoadmapScreen';
+import { PomodoroScreen } from './screens/PomodoroScreen';
+import { HabitBreakerScreen } from './screens/HabitBreakerScreen';
+import { MoreHubScreen } from './screens/MoreHubScreen';
 import { Download, X } from 'lucide-react';
 
 interface UndoState {
@@ -55,6 +60,30 @@ export function App() {
   const [bannerBlock, setBannerBlock] = useState<RoutineBlock | null>(null);
   const [undoState, setUndoState] = useState<UndoState | null>(null);
   const [autoBackupNotice, setAutoBackupNotice] = useState(false);
+  const [pomodoroTopic, setPomodoroTopic] = useState<string>('');
+
+  const handleUpdateHabitTracker = (updated: HabitQuitTracker) => {
+    setAppData((prev) => ({
+      ...prev,
+      habitTracker: updated,
+    }));
+  };
+
+  const handlePomodoroSessionCompleted = () => {
+    setAppData((prev) => {
+      const today = getTodayDateString();
+      const prevStats = prev.pomodoroStats || { todayCompleted: 0, lastDate: today, totalCompleted: 0 };
+      const isSameDay = prevStats.lastDate === today;
+      return {
+        ...prev,
+        pomodoroStats: {
+          todayCompleted: isSameDay ? prevStats.todayCompleted + 1 : 1,
+          lastDate: today,
+          totalCompleted: prevStats.totalCompleted + 1,
+        },
+      };
+    });
+  };
 
   // Sync state to localStorage whenever appData updates
   useEffect(() => {
@@ -497,6 +526,41 @@ export function App() {
             onAddTodo={handleAddTodo}
             onChangeTodoPriority={handleChangeTodoPriority}
             onDeleteTodo={handleDeleteTodo}
+            onOpenPomodoro={() => setCurrentTab('pomodoro')}
+          />
+        )}
+
+        {currentTab === 'pomodoro' && (
+          <PomodoroScreen
+            sprints={appData.sprints}
+            pomodoroStats={appData.pomodoroStats}
+            onSessionCompleted={handlePomodoroSessionCompleted}
+            initialTopic={pomodoroTopic}
+          />
+        )}
+
+        {(currentTab === 'learning' || currentTab === 'roadmap') && (
+          <RoadmapScreen
+            sprints={appData.sprints}
+            onUpdateSprints={(sprints) => setAppData((prev) => ({ ...prev, sprints }))}
+            onStartPomodoroForSprint={(topic) => {
+              setPomodoroTopic(topic);
+              setCurrentTab('pomodoro');
+            }}
+          />
+        )}
+
+        {currentTab === 'habits' && (
+          <HabitBreakerScreen
+            tracker={appData.habitTracker || DEFAULT_HABIT_TRACKER}
+            onUpdateTracker={handleUpdateHabitTracker}
+          />
+        )}
+
+        {currentTab === 'more' && (
+          <MoreHubScreen
+            onNavigate={setCurrentTab}
+            inboxCount={unreadDumpsCount}
           />
         )}
 
@@ -528,7 +592,7 @@ export function App() {
             todos={appData.todos}
             onSaveRetroNote={handleSaveRetroNote}
             onAcknowledgeSittingTodo={handleAcknowledgeSittingTodo}
-            onOpenRoadmap={() => setCurrentTab('roadmap')}
+            onOpenRoadmap={() => setCurrentTab('learning')}
           />
         )}
 
@@ -536,17 +600,9 @@ export function App() {
           <SettingsScreen
             appData={appData}
             onUpdateAppData={(patch) => setAppData((prev) => ({ ...prev, ...patch }))}
-            onOpenRoadmap={() => setCurrentTab('roadmap')}
+            onOpenRoadmap={() => setCurrentTab('learning')}
             onResetAllData={handleResetAllData}
             onTriggerTestNotification={(block) => handleBlockTrigger(block)}
-          />
-        )}
-
-        {currentTab === 'roadmap' && (
-          <RoadmapScreen
-            sprints={appData.sprints}
-            onUpdateSprints={(sprints) => setAppData((prev) => ({ ...prev, sprints }))}
-            onBack={() => setCurrentTab('settings')}
           />
         )}
       </main>
