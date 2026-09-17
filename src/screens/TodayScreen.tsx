@@ -137,7 +137,55 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
       {/* Progress strip */}
       <ProgressStrip blocks={routineBlocks} dailyLog={dailyLog} />
 
-      {/* Main Focus: Current Block */}
+      {/* 1. EARLIER TODAY CATCH-UP (Positioned right above Right Now) */}
+      {pastUncompletedBlocks.length > 0 && (
+        <div className="bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/80 rounded-2xl p-3.5 space-y-2.5 shadow-soft animate-in fade-in">
+          <div className="flex items-center justify-between">
+            <span className="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+              <History className="w-4 h-4 text-amber-600" />
+              <span>Earlier today — did you finish these?</span>
+            </span>
+            <span className="text-xs text-amber-700 dark:text-amber-300 font-bold bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded-full">
+              {pastUncompletedBlocks.length} to check off
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {pastUncompletedBlocks.map((block) => (
+              <div 
+                key={block.id} 
+                className="flex items-center justify-between p-3 bg-white dark:bg-warm-850 rounded-xl border border-amber-200/70 dark:border-warm-800 shadow-xs gap-2"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-warm-900 dark:text-warm-100 truncate">
+                    {block.name}
+                  </p>
+                  <p className="text-xs text-warm-500 font-medium">
+                    {formatTimeRange(block.startTime, block.endTime)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => handleDone(block.id)}
+                    className="min-h-[40px] px-3.5 py-1.5 bg-focus-600 hover:bg-focus-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1 shadow-sm active:scale-95 transition-all"
+                  >
+                    <Check className="w-4 h-4 stroke-[2.5]" />
+                    <span>Done</span>
+                  </button>
+                  <button
+                    onClick={() => handleSkip(block.id)}
+                    className="min-h-[40px] px-2.5 py-1.5 bg-warm-100 hover:bg-warm-200 dark:bg-warm-800 text-warm-600 dark:text-warm-300 rounded-xl text-xs font-semibold active:scale-95 transition-all"
+                  >
+                    Skip
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 2. MAIN FOCUS: RIGHT NOW TASK */}
       <div>
         {currentBlock ? (
           <div className="relative bg-white dark:bg-warm-850 rounded-3xl p-5 border border-warm-200/90 dark:border-warm-800 shadow-soft transition-all space-y-2.5">
@@ -252,13 +300,12 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
         )}
       </div>
 
-      {/* Today's One Thing */}
+      {/* 3. PRIORITY-BASED TO-DOS */}
       <PriorityCard
         priority={dailyLog.priority}
         onUpdatePriority={onUpdatePriority}
       />
 
-      {/* Additional To-Dos: Top A-Item & Collapsible B/C Disclosure */}
       <AdditionalTodosSection
         todos={todos}
         onToggleTodo={onToggleTodo}
@@ -267,7 +314,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
         onDeleteTodo={onDeleteTodo}
       />
 
-      {/* Motivational Dream Redirection Banner */}
+      {/* 4. MOTIVATIONAL DREAM REDIRECTION BANNER */}
       {onNavigateToLearning && (
         <div 
           onClick={onNavigateToLearning}
@@ -293,7 +340,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
                     Take assessment to achieve your dream
                   </h3>
                   <p className="text-xs text-warm-500 dark:text-warm-400 mt-0.5">
-                    Answer 6 quick questions to create your weekly learning roadmap
+                    Build your custom weekly target & learning roadmap
                   </p>
                 </>
               )}
@@ -302,54 +349,6 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
           <span className="text-sm font-bold text-focus-600 dark:text-focus-400 group-hover:translate-x-0.5 transition-transform shrink-0 pl-2">
             {dreamAssessment ? 'Roadmap →' : 'Start →'}
           </span>
-        </div>
-      )}
-
-      {/* Catch-Up on Earlier Tasks */}
-      {pastUncompletedBlocks.length > 0 && (
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-warm-900 border border-amber-300 dark:border-amber-800/80 rounded-2xl p-3.5 space-y-2.5 shadow-soft animate-in fade-in">
-          <div className="flex items-center justify-between">
-            <span className="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
-              <History className="w-4 h-4 text-amber-600" />
-              <span>Earlier today — Did you finish these?</span>
-            </span>
-            <span className="text-xs text-amber-700 dark:text-amber-300 font-bold bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded-full">
-              {pastUncompletedBlocks.length} to check off
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            {pastUncompletedBlocks.map((block) => (
-              <div 
-                key={block.id} 
-                className="flex items-center justify-between p-3 bg-white dark:bg-warm-850 rounded-xl border border-amber-200/80 dark:border-warm-800 shadow-xs gap-2"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-warm-900 dark:text-warm-100 truncate">
-                    {block.name}
-                  </p>
-                  <p className="text-xs text-warm-500 font-medium">
-                    {formatTimeRange(block.startTime, block.endTime)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    onClick={() => handleDone(block.id)}
-                    className="min-h-[40px] px-3.5 py-1.5 bg-focus-600 hover:bg-focus-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1 shadow-sm active:scale-95 transition-all"
-                  >
-                    <Check className="w-4 h-4 stroke-[2.5]" />
-                    <span>Done</span>
-                  </button>
-                  <button
-                    onClick={() => handleSkip(block.id)}
-                    className="min-h-[40px] px-2.5 py-1.5 bg-warm-100 hover:bg-warm-200 dark:bg-warm-800 text-warm-600 dark:text-warm-300 rounded-xl text-xs font-semibold active:scale-95 transition-all"
-                  >
-                    Skip
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       )}
 

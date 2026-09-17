@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { PomodoroStats } from '../types';
-import { Play, Pause, RotateCcw, FastForward, CheckCircle2, Sparkles, Coffee, Flame } from 'lucide-react';
+import { Play, Pause, RotateCcw, FastForward, CheckCircle2 } from 'lucide-react';
+import { Brain, Coffee, Trophy, Sparkle, Fire, Flame } from '@phosphor-icons/react';
 import confetti from 'canvas-confetti';
 import { soundPlayer } from '../lib/audio';
 
@@ -98,53 +99,46 @@ export const PomodoroScreen: React.FC<PomodoroScreenProps> = ({
   const progressRatio = Math.max(0, Math.min(1, (totalDuration - timeLeft) / totalDuration));
   const strokeDashoffset = circumference - progressRatio * circumference;
 
+  const completedToday = pomodoroStats?.todayCompleted || 0;
+
   return (
-    <div className="flex-1 max-w-md mx-auto w-full px-4 pt-3 pb-24 safe-top space-y-5">
-      {/* Simple Header */}
-      <div className="text-center space-y-1">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-focus-100 dark:bg-focus-900/40 text-focus-700 dark:text-focus-300 text-xs font-semibold">
-          <Sparkles className="w-3.5 h-3.5 text-focus-600" />
-          <span>Single-Task Focus</span>
-        </div>
-        <h1 className="text-2xl font-black tracking-tight text-warm-900 dark:text-warm-100">
+    <div className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-24 safe-top flex flex-col items-center justify-center text-center space-y-5">
+      {/* Clean Centered Header: Chip and sub-descriptions removed */}
+      <div className="w-full text-center">
+        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-warm-900 dark:text-warm-100">
           {mode === 'focus' ? '25 Min Focus' : '5 Min Rest'}
         </h1>
-        <p className="text-xs text-warm-500 dark:text-warm-400">
-          {mode === 'focus' 
-            ? 'One task at a time. Pure calm momentum.' 
-            : 'Step away from the screen, stretch, drink water!'}
-        </p>
       </div>
 
-      {/* Mode Selector Tabs */}
-      <div className="flex p-1.5 bg-warm-200/60 dark:bg-warm-850 rounded-2xl">
+      {/* Mode Selector Tabs with Attractive Phosphor Icons */}
+      <div className="w-full flex p-1.5 bg-warm-200/60 dark:bg-warm-850 rounded-2xl max-w-xs mx-auto shadow-inner">
         <button
           onClick={() => handleSwitchMode('focus')}
-          className={`flex-1 py-3 rounded-xl text-sm font-extrabold transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 ${
             mode === 'focus'
-              ? 'bg-white dark:bg-warm-800 text-focus-600 dark:text-focus-400 shadow-sm'
+              ? 'bg-white dark:bg-warm-800 text-focus-600 dark:text-focus-400 shadow-sm scale-[1.02]'
               : 'text-warm-600 dark:text-warm-400 hover:text-warm-900'
           }`}
         >
-          <Flame className="w-4 h-4" />
+          <Brain size={20} weight="fill" className="text-focus-600 dark:text-focus-400" />
           <span>25m Focus</span>
         </button>
         <button
           onClick={() => handleSwitchMode('rest')}
-          className={`flex-1 py-3 rounded-xl text-sm font-extrabold transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 ${
             mode === 'rest'
-              ? 'bg-white dark:bg-warm-800 text-leaf-600 dark:text-leaf-400 shadow-sm'
+              ? 'bg-white dark:bg-warm-800 text-leaf-600 dark:text-leaf-400 shadow-sm scale-[1.02]'
               : 'text-warm-600 dark:text-warm-400 hover:text-warm-900'
           }`}
         >
-          <Coffee className="w-4 h-4" />
+          <Coffee size={20} weight="fill" className="text-leaf-600 dark:text-leaf-400" />
           <span>5m Rest</span>
         </button>
       </div>
 
       {/* Circular Timer Display with Pomo-Dino */}
-      <div className="relative flex items-center justify-center py-4">
-        <svg className="w-72 h-72 transform -rotate-90" viewBox="0 0 240 240">
+      <div className="relative flex items-center justify-center py-2">
+        <svg className="w-64 h-64 sm:w-72 sm:h-72 transform -rotate-90" viewBox="0 0 240 240">
           {/* Background Track */}
           <circle
             cx="120"
@@ -172,7 +166,7 @@ export const PomodoroScreen: React.FC<PomodoroScreenProps> = ({
 
         {/* Center Content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-          <div className="w-20 h-20 rounded-full p-1 bg-white/95 dark:bg-warm-800/95 shadow-soft backdrop-blur-sm mb-1 overflow-hidden">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 bg-white/95 dark:bg-warm-800/95 shadow-soft backdrop-blur-sm mb-1 overflow-hidden">
             <img
               src="/pomo-dino.png"
               alt="Pomo Dino"
@@ -180,34 +174,34 @@ export const PomodoroScreen: React.FC<PomodoroScreenProps> = ({
             />
           </div>
 
-          <span className="text-5xl font-black font-mono tracking-tight text-warm-900 dark:text-warm-100">
+          <span className="text-4xl sm:text-5xl font-black font-mono tracking-tight text-warm-900 dark:text-warm-100">
             {formatTime(timeLeft)}
           </span>
 
-          <span className={`text-xs font-bold mt-1 px-3 py-1 rounded-full ${
+          <span className={`text-xs font-bold mt-1 px-3 py-0.5 rounded-full ${
             mode === 'focus'
               ? 'bg-focus-100 text-focus-700 dark:bg-focus-900/60 dark:text-focus-300'
               : 'bg-leaf-100 text-leaf-700 dark:bg-leaf-900/60 dark:text-leaf-300'
           }`}>
-            {isRunning ? (mode === 'focus' ? 'Focusing...' : 'Resting...') : 'Ready'}
+            {isRunning ? (mode === 'focus' ? 'Deep Focus...' : 'Resting...') : 'Ready'}
           </span>
         </div>
       </div>
 
-      {/* Timer Controls */}
-      <div className="flex items-center justify-center gap-4">
+      {/* Centered Timer Controls */}
+      <div className="flex items-center justify-center gap-3 sm:gap-4 w-full">
         <button
           onClick={handleReset}
-          className="p-4 rounded-2xl bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700 transition-all shadow-sm active:scale-95"
+          className="p-3.5 sm:p-4 rounded-2xl bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700 transition-all shadow-sm active:scale-95"
           title="Reset timer"
           aria-label="Reset timer"
         >
-          <RotateCcw className="w-6 h-6" />
+          <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
 
         <button
           onClick={handleTogglePlay}
-          className={`px-10 py-4 rounded-2xl font-black text-white shadow-lifted flex items-center gap-3 transition-all transform active:scale-95 ${
+          className={`px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl font-black text-white shadow-lifted flex items-center justify-center gap-2.5 transition-all transform active:scale-95 ${
             mode === 'focus'
               ? 'bg-focus-600 hover:bg-focus-700'
               : 'bg-leaf-600 hover:bg-leaf-700'
@@ -216,46 +210,86 @@ export const PomodoroScreen: React.FC<PomodoroScreenProps> = ({
         >
           {isRunning ? (
             <>
-              <Pause className="w-6 h-6 fill-current" />
-              <span className="text-base">Pause</span>
+              <Pause className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
+              <span className="text-base sm:text-lg">Pause</span>
             </>
           ) : (
             <>
-              <Play className="w-6 h-6 fill-current ml-0.5" />
-              <span className="text-base">Start {mode === 'focus' ? 'Focus' : 'Rest'}</span>
+              <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-current ml-0.5" />
+              <span className="text-base sm:text-lg">Start {mode === 'focus' ? 'Focus' : 'Rest'}</span>
             </>
           )}
         </button>
 
         <button
           onClick={() => handleSwitchMode(mode === 'focus' ? 'rest' : 'focus')}
-          className="p-4 rounded-2xl bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700 transition-all shadow-sm active:scale-95"
+          className="p-3.5 sm:p-4 rounded-2xl bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700 transition-all shadow-sm active:scale-95"
           title="Skip to next session"
           aria-label="Skip to next session"
         >
-          <FastForward className="w-6 h-6" />
+          <FastForward className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
       </div>
 
-      {/* Minimal Session Counter */}
-      {pomodoroStats && (
-        <div className="text-center py-2 bg-white dark:bg-warm-850 rounded-2xl border border-warm-200/80 dark:border-warm-800/80 shadow-xs">
-          <p className="text-xs font-bold text-warm-500 dark:text-warm-400">
-            Today's Completed Sessions: <strong className="text-focus-600 dark:text-focus-400 text-sm font-black">{pomodoroStats.todayCompleted}</strong> 🍅
-          </p>
+      {/* Attractive Centered Session Rewards Card */}
+      <div className="w-full max-w-sm mx-auto bg-gradient-to-r from-focus-50 via-warm-50 to-amber-50 dark:from-warm-850 dark:to-warm-900 rounded-3xl p-4 border border-focus-200/90 dark:border-focus-800/80 shadow-soft">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 text-left">
+            <div className="w-11 h-11 rounded-2xl bg-focus-100 dark:bg-focus-950/80 text-focus-600 dark:text-focus-400 flex items-center justify-center shadow-xs">
+              <Trophy size={24} weight="fill" className="text-focus-600 dark:text-focus-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-warm-500 uppercase tracking-wider">
+                  Today's Rewards
+                </span>
+                <Sparkle size={13} weight="fill" className="text-amber-500 animate-pulse" />
+              </div>
+              <p className="text-base font-black text-warm-900 dark:text-warm-100">
+                {completedToday} {completedToday === 1 ? 'Focus Session' : 'Focus Sessions'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 bg-white dark:bg-warm-800 px-3 py-1.5 rounded-2xl border border-warm-200/80 dark:border-warm-700 shadow-xs">
+            <Fire size={18} weight="fill" className="text-focus-600" />
+            <span className="text-xs font-black text-warm-900 dark:text-warm-100">
+              {completedToday * 25}m
+            </span>
+          </div>
         </div>
-      )}
+
+        {/* Visual Achievement Badges based on completed sessions */}
+        <div className="mt-3 pt-3 border-t border-focus-200/60 dark:border-warm-800 flex items-center justify-center gap-2">
+          {[1, 2, 3, 4].map((sessionNum) => {
+            const isUnlocked = completedToday >= sessionNum;
+            return (
+              <div
+                key={sessionNum}
+                className={`flex-1 py-1 px-2 rounded-xl flex items-center justify-center gap-1 text-[11px] font-black transition-all ${
+                  isUnlocked
+                    ? 'bg-focus-600 text-white shadow-xs'
+                    : 'bg-warm-100 dark:bg-warm-800 text-warm-400 dark:text-warm-600'
+                }`}
+              >
+                <Flame size={13} weight={isUnlocked ? 'fill' : 'regular'} />
+                <span>#{sessionNum}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Celebration Notice */}
       {showCelebration && (
-        <div className="p-3.5 rounded-2xl bg-leaf-50 dark:bg-leaf-950/50 border border-leaf-300 dark:border-leaf-800 flex items-center justify-between text-xs animate-in fade-in zoom-in-95">
-          <div className="flex items-center gap-2.5">
+        <div className="w-full max-w-sm mx-auto p-3.5 rounded-2xl bg-leaf-50 dark:bg-leaf-950/50 border border-leaf-300 dark:border-leaf-800 flex items-center justify-between text-xs animate-in fade-in zoom-in-95">
+          <div className="flex items-center gap-2.5 text-left">
             <div className="w-8 h-8 rounded-full bg-leaf-500 text-white flex items-center justify-center shrink-0">
               <CheckCircle2 className="w-5 h-5" />
             </div>
             <div>
               <strong className="text-leaf-900 dark:text-leaf-200 block text-xs">
-                Great job! 25-minute focus session complete 🎉
+                Great job! 25-minute focus session complete!
               </strong>
               <span className="text-leaf-700 dark:text-leaf-400 text-[11px]">
                 Enjoy your 5-minute rest.
@@ -273,4 +307,3 @@ export const PomodoroScreen: React.FC<PomodoroScreenProps> = ({
     </div>
   );
 };
-
