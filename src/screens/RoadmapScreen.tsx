@@ -480,11 +480,11 @@ export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
   const activeWeek = dreamAssessment?.weeklyPlans.find((w) => w.id === expandedWeekId) || dreamAssessment?.weeklyPlans[0];
 
   return (
-    <div className="flex-1 max-w-md mx-auto w-full px-4 pt-3 pb-24 safe-top space-y-4">
-      {/* Hero Overview Card */}
-      <div className="bg-gradient-to-br from-focus-50 via-warm-50 to-leaf-50 dark:from-warm-850 dark:to-warm-900 rounded-3xl p-5 border border-focus-200/80 dark:border-focus-800/60 shadow-soft space-y-3">
+    <div className="flex-1 max-w-md mx-auto w-full px-4 pt-3 pb-28 safe-top space-y-4">
+      {/* Hero Overview Card matching reference design */}
+      <div className="glass-card-warm rounded-[28px] p-5 border border-white/70 dark:border-white/10 shadow-lifted space-y-3">
         <div className="flex items-center justify-between">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-focus-100 dark:bg-focus-950/80 text-focus-800 dark:text-focus-300 text-xs font-black uppercase tracking-wider">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-focus-100 dark:bg-focus-950/80 text-focus-800 dark:text-focus-300 text-xs font-black uppercase tracking-wider border border-focus-300/50">
             <Target className="w-3.5 h-3.5 text-focus-600" />
             <span>Target Goal</span>
           </div>
@@ -554,12 +554,12 @@ export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
               <button
                 key={w.id}
                 onClick={() => setExpandedWeekId(w.id)}
-                className={`px-3 py-2 rounded-2xl text-xs font-extrabold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 border ${
+                className={`px-3.5 py-2 rounded-2xl text-xs font-extrabold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 border ${
                   isSelected
-                    ? 'bg-focus-600 text-white border-focus-600 shadow-sm'
+                    ? 'bg-focus-600 text-white border-focus-600 shadow-sm scale-105'
                     : isWeekDone
                       ? 'bg-leaf-100 text-leaf-800 dark:bg-leaf-950 dark:text-leaf-300 border-leaf-300'
-                      : 'bg-white dark:bg-warm-850 text-warm-700 dark:text-warm-300 border-warm-200 dark:border-warm-800'
+                      : 'glass-card text-warm-700 dark:text-warm-300 border-white/60 dark:border-warm-800'
                 }`}
               >
                 {isWeekDone && <CheckCircle2 className="w-3.5 h-3.5" />}
@@ -572,7 +572,7 @@ export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
 
       {/* ACTIVE WEEK FOCUS CARD (Only 1 week highlighted at a time to prevent ADHD anxiety) */}
       {activeWeek && (
-        <div className="bg-white dark:bg-warm-850 rounded-3xl p-5 border border-focus-200/90 dark:border-warm-800 shadow-soft space-y-4">
+        <div className="glass-card rounded-[28px] p-5 border border-white/70 dark:border-white/10 shadow-lifted space-y-4">
           <div className="flex items-start justify-between gap-2 border-b border-warm-100 dark:border-warm-800 pb-3">
             <div>
               <span className="text-[11px] font-black uppercase tracking-wider text-focus-600 dark:text-focus-400">

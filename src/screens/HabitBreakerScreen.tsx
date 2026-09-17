@@ -247,7 +247,7 @@ export const HabitBreakerScreen: React.FC<HabitBreakerScreenProps> = ({
   const totalUnlockedCount = HABIT_MILESTONES.filter((m) => unlockedMilestonesSet.has(m.id)).length;
 
   return (
-    <div className="flex-1 max-w-md mx-auto w-full px-4 pt-3 pb-24 safe-top space-y-4">
+    <div className="flex-1 max-w-md mx-auto w-full px-4 pt-3 pb-28 safe-top space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between px-1">
         <div>
@@ -262,32 +262,32 @@ export const HabitBreakerScreen: React.FC<HabitBreakerScreenProps> = ({
 
         <button
           onClick={() => setIsAddingHabit(true)}
-          className="px-3 py-2 rounded-xl bg-focus-600 hover:bg-focus-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
+          className="px-3.5 py-2 rounded-2xl bg-focus-600 hover:bg-focus-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-lifted active:scale-95 transition-all"
         >
           <Plus className="w-4 h-4" />
           <span>Add Habit</span>
         </button>
       </div>
 
-      {/* Rewards Section Trigger Banner (Opens separate Dialog View) */}
+      {/* Rewards Section Trigger Banner (Glassmorphism card matching reference photo) */}
       <button
         onClick={() => setIsRewardsDialogOpen(true)}
-        className="w-full p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 via-warm-50 to-focus-50 dark:from-warm-850 dark:to-warm-900 border border-amber-200/90 dark:border-warm-700 shadow-soft flex items-center justify-between hover:border-amber-400 transition-all active:scale-[0.99] group text-left"
+        className="w-full p-4 rounded-[28px] glass-card-warm flex items-center justify-between hover:scale-[1.01] transition-all active:scale-[0.99] group text-left"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
-            <Trophy size={22} weight="fill" className="text-amber-500" />
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-amber-100/90 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+            <Trophy size={24} weight="fill" className="text-amber-500" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h2 className="text-xs sm:text-sm font-black text-warm-900 dark:text-warm-100">
+              <h2 className="text-sm sm:text-base font-black text-warm-900 dark:text-warm-100">
                 Unlockable Achievements
               </h2>
-              <span className="text-[10px] font-black px-1.5 py-0.2 rounded-full bg-amber-200/70 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200">
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200">
                 {totalUnlockedCount}/{HABIT_MILESTONES.length}
               </span>
             </div>
-            <p className="text-[11px] text-warm-500 font-medium mt-0.5">
+            <p className="text-xs text-warm-500 font-medium mt-0.5">
               Tap to view dopamine & recovery reward milestones
             </p>
           </div>
@@ -299,7 +299,7 @@ export const HabitBreakerScreen: React.FC<HabitBreakerScreenProps> = ({
 
       {/* Main Content: Only show created habit cards, or show create button if empty */}
       {trackers.length === 0 ? (
-        <div className="text-center py-10 px-4 bg-white dark:bg-warm-850 rounded-3xl border border-warm-200/90 dark:border-warm-800 shadow-soft space-y-4">
+        <div className="text-center py-10 px-4 glass-card rounded-[28px] border border-white/60 dark:border-warm-800 shadow-soft space-y-4">
           <div className="w-16 h-16 mx-auto rounded-3xl bg-focus-100 dark:bg-focus-950 text-focus-600 dark:text-focus-400 flex items-center justify-center shadow-xs">
             <Trophy size={32} weight="fill" className="text-focus-600" />
           </div>
@@ -344,7 +344,7 @@ export const HabitBreakerScreen: React.FC<HabitBreakerScreenProps> = ({
             return (
               <div
                 key={tracker.id}
-                className="bg-white dark:bg-warm-850 rounded-3xl border border-warm-200/90 dark:border-warm-800 shadow-soft overflow-hidden transition-all"
+                className="glass-card rounded-[28px] border border-white/70 dark:border-white/10 shadow-lifted overflow-hidden transition-all"
               >
                 {/* Card Header (Click to dropdown/toggle) */}
                 <div
