@@ -9,7 +9,8 @@ import type {
   Streak,
   TodoItem,
   TodoPriority,
-  HabitQuitTracker
+  HabitQuitTracker,
+  DreamAssessment
 } from './types';
 import { 
   loadAppData, 
@@ -21,7 +22,7 @@ import {
   getRoutineBlocksForDate,
   checkAndRunAutoWeeklyBackup,
   canAddTodo,
-  DEFAULT_HABIT_TRACKER
+  DEFAULT_HABIT_TRACKERS
 } from './lib/storage';
 import { autoResolveMissedBlocks } from './lib/autoResolve';
 import { getCurrentAndNextBlock, getWeekKey } from './lib/time';
@@ -60,12 +61,19 @@ export function App() {
   const [bannerBlock, setBannerBlock] = useState<RoutineBlock | null>(null);
   const [undoState, setUndoState] = useState<UndoState | null>(null);
   const [autoBackupNotice, setAutoBackupNotice] = useState(false);
-  const [pomodoroTopic, setPomodoroTopic] = useState<string>('');
 
-  const handleUpdateHabitTracker = (updated: HabitQuitTracker) => {
+  const handleUpdateHabitTrackers = (updated: HabitQuitTracker[]) => {
     setAppData((prev) => ({
       ...prev,
-      habitTracker: updated,
+      habitTrackers: updated,
+      habitTracker: updated[0] || prev.habitTracker,
+    }));
+  };
+
+  const handleUpdateDreamAssessment = (assessment: DreamAssessment | null) => {
+    setAppData((prev) => ({
+      ...prev,
+      dreamAssessment: assessment,
     }));
   };
 
@@ -519,6 +527,7 @@ export function App() {
             currentBlock={currentBlock}
             nextBlock={nextBlock}
             todos={appData.todos}
+            dreamAssessment={appData.dreamAssessment}
             onUpdatePriority={handleUpdatePriority}
             onMarkBlockStatus={handleMarkBlockStatus}
             onOpenBreakdown={(block) => setBreakdownBlock(block)}
@@ -526,34 +535,31 @@ export function App() {
             onAddTodo={handleAddTodo}
             onChangeTodoPriority={handleChangeTodoPriority}
             onDeleteTodo={handleDeleteTodo}
-            onOpenPomodoro={() => setCurrentTab('pomodoro')}
+            onNavigateToLearning={() => setCurrentTab('learning')}
           />
         )}
 
         {currentTab === 'pomodoro' && (
           <PomodoroScreen
-            sprints={appData.sprints}
             pomodoroStats={appData.pomodoroStats}
             onSessionCompleted={handlePomodoroSessionCompleted}
-            initialTopic={pomodoroTopic}
           />
         )}
 
         {(currentTab === 'learning' || currentTab === 'roadmap') && (
           <RoadmapScreen
-            sprints={appData.sprints}
-            onUpdateSprints={(sprints) => setAppData((prev) => ({ ...prev, sprints }))}
-            onStartPomodoroForSprint={(topic) => {
-              setPomodoroTopic(topic);
-              setCurrentTab('pomodoro');
-            }}
+            dreamAssessment={appData.dreamAssessment}
+            onUpdateDreamAssessment={handleUpdateDreamAssessment}
+            onStartPomodoro={() => setCurrentTab('pomodoro')}
           />
         )}
 
         {currentTab === 'habits' && (
           <HabitBreakerScreen
-            tracker={appData.habitTracker || DEFAULT_HABIT_TRACKER}
-            onUpdateTracker={handleUpdateHabitTracker}
+            trackers={appData.habitTrackers && appData.habitTrackers.length > 0
+              ? appData.habitTrackers 
+              : (appData.habitTracker ? [appData.habitTracker] : DEFAULT_HABIT_TRACKERS)}
+            onUpdateTrackers={handleUpdateHabitTrackers}
           />
         )}
 

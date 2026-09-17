@@ -234,10 +234,10 @@ export const HABIT_MILESTONES: HabitMilestone[] = [
   {
     id: 'm-2h',
     hours: 2,
-    title: 'First Step: Pulse Stabilizing',
+    title: 'First Step: Pulse & Urge Stabilizing',
     badge: '🌱',
     rewardDescription: 'The First Clean Break',
-    benefitDetail: 'Heart rate and blood pressure start returning to normal. Physical craving peaks are acknowledged without giving in.',
+    benefitDetail: 'Heart rate settles and breathing steadies. You acknowledged the impulse without surrendering to it!',
   },
   {
     id: 'm-4h',
@@ -245,15 +245,15 @@ export const HABIT_MILESTONES: HabitMilestone[] = [
     title: 'Craving Surfer',
     badge: '🌊',
     rewardDescription: 'Urge Surfing Master',
-    benefitDetail: 'Blood oxygen levels climb. You have interrupted the automatic subconscious habit loop!',
+    benefitDetail: 'Oxygen balance normalizes. You successfully interrupted the automatic subconscious dopamine habit loop!',
   },
   {
     id: 'm-8h',
     hours: 8,
-    title: 'Oxygen Revival',
+    title: 'Mental Clarity Rising',
     badge: '💨',
-    rewardDescription: 'Clear Breath Badge',
-    benefitDetail: 'Excess carbon monoxide and mental fog drop significantly. Brain oxygenation reaches optimal clarity.',
+    rewardDescription: 'Clear Breath & Mind',
+    benefitDetail: 'Brain fog begins clearing. Natural alertness rises as your nervous system stops expecting the compulsive fix.',
   },
   {
     id: 'm-12h',
@@ -261,7 +261,7 @@ export const HABIT_MILESTONES: HabitMilestone[] = [
     title: 'Half-Day Hero',
     badge: '☀️',
     rewardDescription: '12-Hour Bronze Shield',
-    benefitDetail: 'A full half day! Cellular detox is active. Your dopamine baseline begins its very first reset.',
+    benefitDetail: 'A full half day clean! Cellular and nervous system recovery begins. Your baseline dopamine reset is officially in motion.',
   },
   {
     id: 'm-24h',
@@ -269,31 +269,31 @@ export const HABIT_MILESTONES: HabitMilestone[] = [
     title: 'One Full Day Free',
     badge: '🏆',
     rewardDescription: '24-Hour Golden Trophy',
-    benefitDetail: '24 hours without the habit! Your acute stress and anxiety start plateauing. A massive personal win!',
+    benefitDetail: '24 hours without the bad habit! Acute agitation peaks and begins to level off. You proved you can overcome the impulse!',
   },
   {
     id: 'm-48h',
     hours: 48,
-    title: 'Two Days Strong',
+    title: 'Two Days Resilient',
     badge: '🔥',
     rewardDescription: 'Nerve Restoration Medal',
-    benefitDetail: 'Taste and sensory receptors begin regeneration. Physical acute chemical withdrawal peaks and begins subsiding.',
+    benefitDetail: 'Sensory receptors and baseline focus awaken. The sharpest phase of the craving loop begins to dissolve.',
   },
   {
     id: 'm-3d',
     hours: 72,
-    title: 'The 72h Peak Beaten',
+    title: 'The 72h Peak Conquered',
     badge: '⚡',
     rewardDescription: 'Peak Conqueror Star',
-    benefitDetail: '72 hours reached! 100% of the primary toxic chemical or compulsive cue is purged from your body. The hardest peak is behind you!',
+    benefitDetail: '72 hours reached! Compulsive urges drop significantly as the acute cycle breaks. The hardest physiological hurdle is behind you!',
   },
   {
     id: 'm-5d',
     hours: 120,
-    title: 'Working Week Victory',
+    title: 'Executive Function Rebuilder',
     badge: '🛡️',
     rewardDescription: 'Focus Defender',
-    benefitDetail: 'Your prefrontal cortex (executive function) is rebuilding synaptic strength. Willpower stamina is now 3x higher than Day 1.',
+    benefitDetail: 'Your prefrontal cortex (executive control) is actively rebuilding synaptic pathways. Willpower stamina is now 3x higher than Day 1.',
   },
   {
     id: 'm-7d',
@@ -301,7 +301,7 @@ export const HABIT_MILESTONES: HabitMilestone[] = [
     title: 'One Week Champion!',
     badge: '🌟',
     rewardDescription: '1-Week Diamond Ribbon',
-    benefitDetail: 'One whole week free! Sleep architecture (deep REM cycles) deeply recovers. Psychological independence is blooming.',
+    benefitDetail: 'One full week clean! Deep restorative sleep returns. You are building true psychological freedom and self-respect.',
   },
   {
     id: 'm-10d',
@@ -309,7 +309,7 @@ export const HABIT_MILESTONES: HabitMilestone[] = [
     title: 'Double-Digit Dynamo',
     badge: '🚀',
     rewardDescription: 'Momentum Engine',
-    benefitDetail: 'Habit triggers that used to spark automatic reach-for reactions are fading. Emotional regulation is stabilizing.',
+    benefitDetail: 'Automatic habit triggers have lost their power over you. Emotional balance and impulse stability are taking hold.',
   },
   {
     id: 'm-14d',
@@ -317,35 +317,48 @@ export const HABIT_MILESTONES: HabitMilestone[] = [
     title: 'Two Full Weeks Clean',
     badge: '👑',
     rewardDescription: 'Crown of Resilience',
-    benefitDetail: 'Dopamine D2 receptor density is steadily up-regulating! Natural joy from learning, food, and daily life returns.',
+    benefitDetail: 'Dopamine D2 receptor density is steadily up-regulating! You feel natural pleasure from learning, deep work, and simple moments.',
   },
   {
     id: 'm-21d',
     hours: 504,
-    title: 'Neural Rewiring Done',
+    title: 'Neural Rewiring Complete',
     badge: '🧠',
     rewardDescription: 'Neuro-Architect Badge',
-    benefitDetail: '21 days: The neurological 3-week habit loop transition is complete. The old neural pathway is atrophying.',
+    benefitDetail: '21 days of neuroplasticity! The old habit pathway has weakened into dormancy, replaced by conscious choices.',
   },
   {
     id: 'm-30d',
     hours: 720,
-    title: '30-Day Legend!',
+    title: '30-Day Master Legend!',
     badge: '🎖️',
     rewardDescription: 'Grandmaster Pomo-Dino',
-    benefitDetail: 'A full 30-day transformation! You have proven to your ADHD brain that consistency and change are 100% achievable.',
+    benefitDetail: 'A full 30 days of self-mastery! You proved to your ADHD brain that consistency, patience, and lasting victory are 100% possible.',
   },
 ];
 
-export const DEFAULT_HABIT_TRACKER: HabitQuitTracker = {
-  id: 'habit-primary',
-  habitName: 'Bad Habit / Smoking / Doomscrolling',
-  quitDate: new Date(Date.now() - 3 * 3600 * 1000).toISOString(), // defaults to 3h ago so first milestone is unlocked to motivate!
-  reason: 'To regain focus, mental clarity, and rebuild my dopamine baseline for learning.',
-  resetsCount: 0,
-  cravingsResisted: 3,
-  unlockedMilestones: ['m-2h'],
-};
+export const DEFAULT_HABIT_TRACKERS: HabitQuitTracker[] = [
+  {
+    id: 'habit-doomscroll',
+    habitName: 'Doomscrolling & Social Media',
+    quitDate: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+    reason: 'To regain focus, mental clarity, and rebuild my dopamine baseline for learning.',
+    resetsCount: 0,
+    cravingsResisted: 3,
+    unlockedMilestones: ['m-2h'],
+  },
+  {
+    id: 'habit-latenight',
+    habitName: 'Late-Night Screen Binging',
+    quitDate: new Date(Date.now() - 26 * 3600 * 1000).toISOString(),
+    reason: 'To get deep restorative REM sleep and wake up without ADHD morning fog.',
+    resetsCount: 0,
+    cravingsResisted: 2,
+    unlockedMilestones: ['m-2h', 'm-4h', 'm-8h', 'm-12h', 'm-24h'],
+  },
+];
+
+export const DEFAULT_HABIT_TRACKER: HabitQuitTracker = DEFAULT_HABIT_TRACKERS[0];
 
 export const DEFAULT_STREAK: Streak = {
   current: 0,
@@ -355,7 +368,7 @@ export const DEFAULT_STREAK: Streak = {
 };
 
 export const INITIAL_APP_DATA: AppData = {
-  version: 3,
+  version: 4,
   routineBlocks: DEFAULT_WEEKDAY_BLOCKS,
   routineSets: DEFAULT_ROUTINE_SETS,
   routineSchedule: DEFAULT_ROUTINE_SCHEDULE,
@@ -376,6 +389,8 @@ export const INITIAL_APP_DATA: AppData = {
   },
   lastAutoExportDate: null,
   habitTracker: DEFAULT_HABIT_TRACKER,
+  habitTrackers: DEFAULT_HABIT_TRACKERS,
+  dreamAssessment: null,
   pomodoroStats: {
     todayCompleted: 0,
     lastDate: getTodayDateString(),
@@ -461,8 +476,18 @@ export function loadAppData(): AppData {
 
     const todos = Array.isArray(parsed.todos) ? parsed.todos : [];
 
+    // Multiple habits migration
+    let habitTrackers = parsed.habitTrackers;
+    if (!habitTrackers || habitTrackers.length === 0) {
+      if (parsed.habitTracker) {
+        habitTrackers = [parsed.habitTracker];
+      } else {
+        habitTrackers = DEFAULT_HABIT_TRACKERS;
+      }
+    }
+
     const data: AppData = {
-      version: 3,
+      version: 4,
       routineBlocks: parsed.routineBlocks || DEFAULT_WEEKDAY_BLOCKS,
       routineSets,
       routineSchedule,
@@ -479,7 +504,9 @@ export function loadAppData(): AppData {
         pomodoro: parsed.settings?.pomodoro || { focusMinutes: 25, restMinutes: 5 },
       },
       lastAutoExportDate: parsed.lastAutoExportDate || null,
-      habitTracker: parsed.habitTracker || DEFAULT_HABIT_TRACKER,
+      habitTracker: habitTrackers[0] || DEFAULT_HABIT_TRACKER,
+      habitTrackers,
+      dreamAssessment: parsed.dreamAssessment || null,
       pomodoroStats: parsed.pomodoroStats || {
         todayCompleted: 0,
         lastDate: getTodayDateString(),

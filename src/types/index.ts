@@ -100,6 +100,23 @@ export type Sprint = {
   topics?: LearningTopic[];
 };
 
+export type WeeklyPlan = {
+  id: string;
+  weekNumber: number;
+  skillTitle: string;
+  topics: LearningTopic[];
+};
+
+export type DreamAssessment = {
+  id: string;
+  dreamTitle: string;
+  researchStatus: 'researched' | 'in_progress' | 'starting';
+  targetWeeks: number;
+  startDate: string; // ISO date
+  motivation: string;
+  weeklyPlans: WeeklyPlan[];
+};
+
 export type HabitMilestone = {
   id: string;
   hours: number;
@@ -150,7 +167,9 @@ export type AppData = {
   weeklyRetroNotes: Record<string, string>; // "YYYY-Wxx" -> note
   settings: AppSettings;
   lastAutoExportDate: string | null; // P0 #1: auto weekly backup
-  habitTracker?: HabitQuitTracker;
+  habitTracker?: HabitQuitTracker; // legacy single tracker
+  habitTrackers?: HabitQuitTracker[]; // multiple bad habit cards
+  dreamAssessment?: DreamAssessment | null; // Dream & Life Targets assessment
   pomodoroStats?: PomodoroStats;
 };
 

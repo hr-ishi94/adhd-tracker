@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { RoutineBlock, DailyLog, BlockStatus, TodoItem, TodoPriority } from '../types';
+import type { RoutineBlock, DailyLog, BlockStatus, TodoItem, TodoPriority, DreamAssessment } from '../types';
 import { formatTimeRange, timeToMinutes } from '../lib/time';
 import { PriorityCard } from '../components/PriorityCard';
 import { ProgressStrip } from '../components/ProgressStrip';
@@ -13,7 +13,8 @@ import {
   History, 
   CalendarDays, 
   ChevronDown, 
-  ChevronUp 
+  ChevronUp,
+  Target
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -23,14 +24,16 @@ interface TodayScreenProps {
   currentBlock: RoutineBlock | null;
   nextBlock: RoutineBlock | null;
   todos: TodoItem[];
+  dreamAssessment?: DreamAssessment | null;
   onUpdatePriority: (newPriority: string) => void;
   onMarkBlockStatus: (blockId: string, status: BlockStatus) => void;
   onOpenBreakdown: (block: RoutineBlock) => void;
   onToggleTodo: (id: string) => void;
   onAddTodo: (text: string, priority: TodoPriority) => boolean;
-  onChangeTodoPriority: (id: string, newPriority: TodoPriority) => void;
+  onChangeTodoPriority: (id: string, priority: TodoPriority) => void;
   onDeleteTodo: (id: string) => void;
-  onOpenPomodoro?: () => void;
+  onNavigateToLearning?: () => void;
+  onOpenEveningReview?: () => void;
 }
 
 export const TodayScreen: React.FC<TodayScreenProps> = ({
@@ -39,6 +42,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
   currentBlock,
   nextBlock,
   todos,
+  dreamAssessment,
   onUpdatePriority,
   onMarkBlockStatus,
   onOpenBreakdown,
@@ -46,7 +50,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
   onAddTodo,
   onChangeTodoPriority,
   onDeleteTodo,
-  onOpenPomodoro,
+  onNavigateToLearning,
 }) => {
   const [showFullSchedule, setShowFullSchedule] = useState(false);
   const currentStatus = currentBlock ? dailyLog.blockStatus[currentBlock.id] || 'pending' : 'pending';
@@ -132,88 +136,6 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
 
       {/* Progress strip */}
       <ProgressStrip blocks={routineBlocks} dailyLog={dailyLog} />
-
-      {/* Catch-Up on Earlier Tasks (Solves issue: forgot to mark task on time) */}
-      {pastUncompletedBlocks.length > 0 && (
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-warm-900 border border-amber-300 dark:border-amber-800/80 rounded-2xl p-3.5 space-y-2.5 shadow-soft animate-in fade-in">
-          <div className="flex items-center justify-between">
-            <span className="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
-              <History className="w-4 h-4 text-amber-600" />
-              <span>Earlier today — Did you finish these?</span>
-            </span>
-            <span className="text-xs text-amber-700 dark:text-amber-300 font-bold bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded-full">
-              {pastUncompletedBlocks.length} to check off
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            {pastUncompletedBlocks.map((block) => (
-              <div 
-                key={block.id} 
-                className="flex items-center justify-between p-3 bg-white dark:bg-warm-850 rounded-xl border border-amber-200/80 dark:border-warm-800 shadow-xs gap-2"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-warm-900 dark:text-warm-100 truncate">
-                    {block.name}
-                  </p>
-                  <p className="text-xs text-warm-500 font-medium">
-                    {formatTimeRange(block.startTime, block.endTime)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    onClick={() => handleDone(block.id)}
-                    className="min-h-[40px] px-3.5 py-1.5 bg-focus-600 hover:bg-focus-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1 shadow-sm active:scale-95 transition-all"
-                  >
-                    <Check className="w-4 h-4 stroke-[2.5]" />
-                    <span>Done</span>
-                  </button>
-                  <button
-                    onClick={() => handleSkip(block.id)}
-                    className="min-h-[40px] px-2.5 py-1.5 bg-warm-100 hover:bg-warm-200 dark:bg-warm-800 text-warm-600 dark:text-warm-300 rounded-xl text-xs font-semibold active:scale-95 transition-all"
-                  >
-                    Skip
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Quick Pomo-Dino Study Sprint Banner */}
-      {onOpenPomodoro && (
-        <div 
-          onClick={onOpenPomodoro}
-          className="cursor-pointer bg-gradient-to-r from-focus-50 via-warm-50 to-leaf-50 dark:from-warm-850 dark:to-warm-900 rounded-2xl p-3.5 border border-focus-200 dark:border-focus-800/60 shadow-soft hover:border-focus-400 transition-all flex items-center justify-between group"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-white dark:bg-warm-800 p-1.5 shadow-sm shrink-0 group-hover:scale-105 transition-transform flex items-center justify-center">
-              <img src="/pomo-dino.png" alt="Dino" className="w-8 h-8 object-contain" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-warm-900 dark:text-warm-100 flex items-center gap-1.5">
-                <span>Start 25m Learning Sprint</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-focus-100 text-focus-800 dark:bg-focus-950 dark:text-focus-300">
-                  + 5m Rest
-                </span>
-              </h2>
-              <p className="text-xs text-warm-500 dark:text-warm-400 mt-0.5">
-                Gentle timer with Pomo-Dino companion
-              </p>
-            </div>
-          </div>
-          <span className="text-sm font-bold text-focus-600 dark:text-focus-400 group-hover:translate-x-0.5 transition-transform px-1">
-            Start →
-          </span>
-        </div>
-      )}
-
-      {/* Today's One Thing */}
-      <PriorityCard
-        priority={dailyLog.priority}
-        onUpdatePriority={onUpdatePriority}
-      />
 
       {/* Main Focus: Current Block */}
       <div>
@@ -324,8 +246,133 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
             <p className="text-xs sm:text-sm text-warm-500 dark:text-warm-400 mt-1 max-w-xs mx-auto">
               {isAllDayResolved
                 ? 'Great rhythm today. Relax or head to Review whenever you are ready.'
-                : 'Take a breath or use the brain dump to capture stray ideas.'}
+                : 'Take a breath or capture thoughts in the to-do list below.'}
             </p>
+          </div>
+        )}
+      </div>
+
+      {/* Today's One Thing */}
+      <PriorityCard
+        priority={dailyLog.priority}
+        onUpdatePriority={onUpdatePriority}
+      />
+
+      {/* Additional To-Dos: Top A-Item & Collapsible B/C Disclosure */}
+      <AdditionalTodosSection
+        todos={todos}
+        onToggleTodo={onToggleTodo}
+        onAddTodo={onAddTodo}
+        onChangeTodoPriority={onChangeTodoPriority}
+        onDeleteTodo={onDeleteTodo}
+      />
+
+      {/* Motivational Dream Redirection Banner */}
+      {onNavigateToLearning && (
+        <div 
+          onClick={onNavigateToLearning}
+          className="cursor-pointer bg-gradient-to-r from-focus-50 via-warm-50 to-leaf-50 dark:from-warm-850 dark:to-warm-900 rounded-2xl p-4 border border-focus-200/90 dark:border-focus-800/60 shadow-soft hover:border-focus-400 transition-all flex items-center justify-between group active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-focus-100 dark:bg-focus-950/80 text-focus-700 dark:text-focus-300 flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+              <Target className="w-5 h-5 text-focus-600 dark:text-focus-400" />
+            </div>
+            <div>
+              {dreamAssessment ? (
+                <>
+                  <p className="text-[11px] font-bold text-focus-700 dark:text-focus-400 uppercase tracking-wider">
+                    My Life Target & Dream
+                  </p>
+                  <h3 className="text-sm sm:text-base font-bold text-warm-900 dark:text-warm-100 leading-snug">
+                    {dreamAssessment.dreamTitle}
+                  </h3>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-sm sm:text-base font-bold text-warm-900 dark:text-warm-100">
+                    Take assessment to achieve your dream
+                  </h3>
+                  <p className="text-xs text-warm-500 dark:text-warm-400 mt-0.5">
+                    Answer 6 quick questions to create your weekly learning roadmap
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+          <span className="text-sm font-bold text-focus-600 dark:text-focus-400 group-hover:translate-x-0.5 transition-transform shrink-0 pl-2">
+            {dreamAssessment ? 'Roadmap →' : 'Start →'}
+          </span>
+        </div>
+      )}
+
+      {/* Catch-Up on Earlier Tasks */}
+      {pastUncompletedBlocks.length > 0 && (
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-warm-900 border border-amber-300 dark:border-amber-800/80 rounded-2xl p-3.5 space-y-2.5 shadow-soft animate-in fade-in">
+          <div className="flex items-center justify-between">
+            <span className="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+              <History className="w-4 h-4 text-amber-600" />
+              <span>Earlier today — Did you finish these?</span>
+            </span>
+            <span className="text-xs text-amber-700 dark:text-amber-300 font-bold bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded-full">
+              {pastUncompletedBlocks.length} to check off
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {pastUncompletedBlocks.map((block) => (
+              <div 
+                key={block.id} 
+                className="flex items-center justify-between p-3 bg-white dark:bg-warm-850 rounded-xl border border-amber-200/80 dark:border-warm-800 shadow-xs gap-2"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-warm-900 dark:text-warm-100 truncate">
+                    {block.name}
+                  </p>
+                  <p className="text-xs text-warm-500 font-medium">
+                    {formatTimeRange(block.startTime, block.endTime)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => handleDone(block.id)}
+                    className="min-h-[40px] px-3.5 py-1.5 bg-focus-600 hover:bg-focus-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1 shadow-sm active:scale-95 transition-all"
+                  >
+                    <Check className="w-4 h-4 stroke-[2.5]" />
+                    <span>Done</span>
+                  </button>
+                  <button
+                    onClick={() => handleSkip(block.id)}
+                    className="min-h-[40px] px-2.5 py-1.5 bg-warm-100 hover:bg-warm-200 dark:bg-warm-800 text-warm-600 dark:text-warm-300 rounded-xl text-xs font-semibold active:scale-95 transition-all"
+                  >
+                    Skip
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Next Block */}
+      <div>
+        {nextBlock ? (
+          <div className="bg-warm-100/70 dark:bg-warm-900/70 rounded-2xl p-3.5 border border-warm-200/60 dark:border-warm-800/60 transition-colors">
+            <div className="flex items-center justify-between text-xs text-warm-500 dark:text-warm-400 mb-0.5">
+              <span className="font-bold uppercase tracking-wider">Coming Up Next</span>
+              <span className="font-semibold">{formatTimeRange(nextBlock.startTime, nextBlock.endTime)}</span>
+            </div>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-sm sm:text-base font-bold text-warm-800 dark:text-warm-200">
+                {nextBlock.name}
+              </p>
+              <span className="text-xs capitalize px-2 py-0.5 rounded-md bg-warm-200/70 dark:bg-warm-800 text-warm-700 dark:text-warm-300 font-medium">
+                {nextBlock.category}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center text-xs text-warm-400 py-1 font-medium">
+            No further blocks scheduled for today.
           </div>
         )}
       </div>
@@ -392,7 +439,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
                         </button>
                         <button
                           onClick={() => handleSkip(b.id)}
-                          className="px-2 py-1.5 rounded-xl bg-warm-100 hover:bg-warm-200 dark:bg-warm-800 text-warm-600 dark:text-warm-300 text-xs font-medium"
+                          className="px-2.5 py-1.5 rounded-xl bg-warm-100 hover:bg-warm-200 dark:bg-warm-800 text-warm-600 dark:text-warm-300 text-xs font-medium"
                         >
                           Skip
                         </button>
@@ -405,40 +452,6 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
           </div>
         )}
       </div>
-
-      {/* Additional To-Dos: Top A-Item & Collapsible B/C Disclosure */}
-      <AdditionalTodosSection
-        todos={todos}
-        onToggleTodo={onToggleTodo}
-        onAddTodo={onAddTodo}
-        onChangeTodoPriority={onChangeTodoPriority}
-        onDeleteTodo={onDeleteTodo}
-      />
-
-      {/* Next Block */}
-      <div>
-        {nextBlock ? (
-          <div className="bg-warm-100/70 dark:bg-warm-900/70 rounded-2xl p-3.5 border border-warm-200/60 dark:border-warm-800/60 transition-colors">
-            <div className="flex items-center justify-between text-xs text-warm-500 dark:text-warm-400 mb-0.5">
-              <span className="font-bold uppercase tracking-wider">Coming Up Next</span>
-              <span className="font-semibold">{formatTimeRange(nextBlock.startTime, nextBlock.endTime)}</span>
-            </div>
-            <div className="flex items-center justify-between mt-1">
-              <p className="text-sm sm:text-base font-bold text-warm-800 dark:text-warm-200">
-                {nextBlock.name}
-              </p>
-              <span className="text-xs capitalize px-2 py-0.5 rounded-md bg-warm-200/70 dark:bg-warm-800 text-warm-700 dark:text-warm-300 font-medium">
-                {nextBlock.category}
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center text-xs text-warm-400 py-1 font-medium">
-            No further blocks scheduled for today.
-          </div>
-        )}
-      </div>
     </div>
   );
 };
-
