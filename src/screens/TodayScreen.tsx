@@ -91,7 +91,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
       particleCount: 40,
       spread: 60,
       origin: { y: 0.7 },
-      colors: ['#e14a27', '#f26543', '#549646'],
+      colors: ['#5C2454', '#F5B700', '#90487B', '#FBBF24'],
       disableForReducedMotion: true,
     });
   };
@@ -122,7 +122,7 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
           <img 
             src="/pomo-dino.png" 
             alt="Pomo-Dino Logo" 
-            className="w-10 h-10 rounded-2xl object-contain shadow-soft border border-focus-200/80 dark:border-focus-800" 
+            className="w-10 h-10 rounded-2xl object-contain shadow-soft border border-focus-200/80 dark:border-focus-800 bg-white/80 dark:bg-warm-900" 
           />
           <div>
             <span className="font-black text-base sm:text-lg text-warm-900 dark:text-warm-100 tracking-tight block leading-tight">
@@ -138,13 +138,13 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
         </span>
       </div>
 
-      {/* Hero Briefing Card (Faithfully modeled after the bottom-right card in reference photo) */}
-      <div className="rounded-[28px] p-5 bg-gradient-to-br from-[#122b52] via-[#1d4ed8] to-[#0ea5e9] text-white shadow-lifted border border-white/20 relative overflow-hidden space-y-2">
+      {/* Hero Briefing Card (Faithfully modeled with ADHD Deep Plum & Warm Amber) */}
+      <div className="rounded-[28px] p-5 bg-gradient-to-br from-[#2D1028] via-[#5C2454] to-[#7E3273] text-white shadow-lifted border border-white/20 relative overflow-hidden space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-200">
+          <span className="text-[11px] font-black uppercase tracking-wider text-amber-300">
             Today's Briefing
           </span>
-          <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-white">
+          <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/30 backdrop-blur-md text-amber-200">
             {resolvedCount}/{totalBlocks} Resolved
           </span>
         </div>
@@ -153,8 +153,8 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
           Good {timeOfDayGreeting}, Focus Hero!
         </h1>
 
-        <p className="text-xs sm:text-sm text-cyan-50 font-medium leading-relaxed">
-          You have <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white/20 font-black">📋 {totalBlocks} routine blocks</span> planned for today{currentBlock ? <>, with <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white/20 font-black">🔥 {currentBlock.name}</span> right now</> : ''}. Ready to begin? 🚀
+        <p className="text-xs sm:text-sm text-amber-50/90 font-medium leading-relaxed">
+          You have <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white/20 font-black">📋 {totalBlocks} routine blocks</span> planned for today{currentBlock ? <>, with <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-400/30 text-amber-100 border border-amber-300/30 font-black">🔥 {currentBlock.name}</span> right now</> : ''}. Ready to begin? 🚀
         </p>
       </div>
 

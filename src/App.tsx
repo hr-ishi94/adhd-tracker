@@ -492,12 +492,12 @@ export function App() {
   const unreadDumpsCount = appData.brainDump.filter((i) => !i.convertedToTask).length;
 
   return (
-    <div className="min-h-full flex flex-col bg-gradient-to-b from-[#fff5f0] via-[#fbf8f6] to-[#f3eee8] dark:from-[#180804] dark:via-[#130b08] dark:to-[#0c0908] text-warm-900 dark:text-warm-100 transition-colors relative selection:bg-focus-500 selection:text-white">
-      {/* Radiant ambient glow blobs inspired by reference design */}
+    <div className="min-h-full flex flex-col bg-gradient-to-b from-[#FAF8F5] via-[#F6F2EA] to-[#EEE8DC] dark:from-[#160D15] dark:via-[#120A11] dark:to-[#0C060B] text-warm-900 dark:text-warm-100 transition-colors relative selection:bg-focus-600 selection:text-white">
+      {/* Radiant ambient glow blobs with ADHD-friendly Deep Plum & Warm Amber */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute -top-28 -left-16 w-[450px] h-[450px] rounded-full bg-focus-500/15 dark:bg-focus-600/25 blur-3xl" />
-        <div className="absolute top-1/3 -right-20 w-[400px] h-[400px] rounded-full bg-amber-400/15 dark:bg-amber-500/15 blur-3xl" />
-        <div className="absolute bottom-24 left-1/4 w-[380px] h-[380px] rounded-full bg-focus-400/10 dark:bg-focus-700/20 blur-3xl" />
+        <div className="absolute -top-28 -left-16 w-[450px] h-[450px] rounded-full bg-focus-600/15 dark:bg-focus-600/25 blur-3xl" />
+        <div className="absolute top-1/3 -right-20 w-[400px] h-[400px] rounded-full bg-amber-400/20 dark:bg-amber-500/15 blur-3xl" />
+        <div className="absolute bottom-24 left-1/4 w-[380px] h-[380px] rounded-full bg-focus-400/12 dark:bg-focus-700/20 blur-3xl" />
       </div>
 
       {/* Auto Backup Notification Banner */}

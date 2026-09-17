@@ -36,7 +36,7 @@ export const PomodoroScreen: React.FC<PomodoroScreenProps> = ({
           particleCount: 75,
           spread: 70,
           origin: { y: 0.6 },
-          colors: ['#f26543', '#549646', '#ffd3c2', '#ffd700'],
+          colors: ['#5C2454', '#F5B700', '#90487B', '#FBBF24'],
         });
       } catch {
         // fallback
@@ -234,12 +234,12 @@ export const PomodoroScreen: React.FC<PomodoroScreenProps> = ({
             transform={`rotate(-90 ${cx} ${cy})`}
           />
 
-          {/* Inner Radiant Core Disc (Rich tomato coral with ambient glow) */}
+          {/* Inner Radiant Core Disc (Rich Deep Plum with ambient glow) */}
           <defs>
-            <radialGradient id="coralCoreGradient" cx="40%" cy="35%" r="65%">
-              <stop offset="0%" stopColor="#fa8060" />
-              <stop offset="45%" stopColor="#e14a27" />
-              <stop offset="100%" stopColor="#b83214" />
+            <radialGradient id="plumCoreGradient" cx="40%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#7E3273" />
+              <stop offset="45%" stopColor="#5C2454" />
+              <stop offset="100%" stopColor="#3C1536" />
             </radialGradient>
             <radialGradient id="leafCoreGradient" cx="40%" cy="35%" r="65%">
               <stop offset="0%" stopColor="#6fb260" />
@@ -247,7 +247,7 @@ export const PomodoroScreen: React.FC<PomodoroScreenProps> = ({
               <stop offset="100%" stopColor="#2c5324" />
             </radialGradient>
             <filter id="coreGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="#e14a27" floodOpacity="0.35" />
+              <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="#5C2454" floodOpacity="0.4" />
             </filter>
           </defs>
 
@@ -255,7 +255,7 @@ export const PomodoroScreen: React.FC<PomodoroScreenProps> = ({
             cx={cx}
             cy={cy}
             r={innerCoreRadius}
-            fill={mode === 'focus' ? 'url(#coralCoreGradient)' : 'url(#leafCoreGradient)'}
+            fill={mode === 'focus' ? 'url(#plumCoreGradient)' : 'url(#leafCoreGradient)'}
             filter="url(#coreGlow)"
           />
         </svg>
@@ -370,11 +370,11 @@ export const PomodoroScreen: React.FC<PomodoroScreenProps> = ({
                 key={sessionNum}
                 className={`w-7 h-7 rounded-xl flex items-center justify-center text-[11px] font-black transition-all ${
                   isUnlocked
-                    ? 'bg-focus-600 text-white shadow-xs'
+                    ? 'bg-focus-600 text-amber-300 shadow-xs ring-1 ring-amber-400/40'
                     : 'bg-warm-200/60 dark:bg-warm-800 text-warm-400'
                 }`}
               >
-                <Flame size={14} weight={isUnlocked ? 'fill' : 'regular'} />
+                <Flame size={14} weight={isUnlocked ? 'fill' : 'regular'} className={isUnlocked ? 'text-amber-400' : ''} />
               </div>
             );
           })}

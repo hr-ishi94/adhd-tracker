@@ -9,21 +9,34 @@ export default {
     extend: {
       colors: {
         focus: {
-          50: '#fff5f1',
-          100: '#ffe8df',
-          200: '#ffd3c2',
-          300: '#fca78e',
-          400: '#fa8060',
-          500: '#f26543',
-          600: '#e14a27', // Pomo-Dino primary brand coral
-          700: '#bc381b',
-          800: '#9b3019',
-          900: '#7f2c1a',
+          50: '#FAF4F8',
+          100: '#F3E6EF',
+          200: '#E8CFE0',
+          300: '#D6ABC9',
+          400: '#B978A5',
+          500: '#90487B',
+          600: '#5C2454', // ADHD-friendly Deep Plum (primary brand)
+          700: '#4B1C44',
+          800: '#3C1536',
+          900: '#2F102A',
+          950: '#1F0A1C',
+        },
+        amber: {
+          50: '#FFFBEB',
+          100: '#FEF3C7',
+          200: '#FDE68A',
+          300: '#FCD34D',
+          400: '#FBBF24',
+          500: '#F5B700', // ADHD-friendly Warm Amber
+          600: '#D99B00',
+          700: '#B47B00',
+          800: '#925F05',
+          900: '#784D09',
         },
         dino: {
-          coral: '#f26543',
-          tummy: '#ffd3c2',
-          tomato: '#d63b2f',
+          plum: '#5C2454',
+          amber: '#F5B700',
+          tummy: '#E8CFE0',
           leaf: '#549646',
           rest: '#407835',
           navy: '#547290',
@@ -61,7 +74,8 @@ export default {
       boxShadow: {
         'soft': '0 2px 10px rgba(0, 0, 0, 0.04)',
         'lifted': '0 8px 30px rgba(0, 0, 0, 0.08)',
-        'glow': '0 0 25px rgba(217, 119, 6, 0.18)',
+        'glow': '0 0 25px rgba(92, 36, 84, 0.22)',
+        'amber-glow': '0 0 25px rgba(245, 183, 0, 0.28)',
       }
     },
   },

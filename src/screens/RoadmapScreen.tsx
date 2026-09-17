@@ -259,7 +259,7 @@ export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
         particleCount: 80,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#f26543', '#549646', '#ffd700'],
+        colors: ['#5C2454', '#F5B700', '#90487B', '#FBBF24'],
       });
     } catch {
       // fallback
@@ -603,7 +603,7 @@ export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
                     type="checkbox"
                     checked={topic.completed}
                     onChange={() => handleToggleTopic(activeWeek.id, topic.id)}
-                    className="w-5 h-5 rounded-lg text-focus-600 focus:ring-focus-500 border-warm-300 dark:border-warm-700 cursor-pointer"
+                    className="w-5 h-5 rounded-lg accent-focus-600 cursor-pointer"
                   />
                   <span className={`text-xs sm:text-sm font-semibold leading-snug ${
                     topic.completed

@@ -54,7 +54,7 @@ export function getMilestonePhosphorIcon(milestoneId: string, isUnlocked: boolea
     case 'm-24h':
       return <Trophy size={size} weight={weight} className={isUnlocked ? 'text-amber-400' : colorClass} />;
     case 'm-48h':
-      return <Flame size={size} className={isUnlocked ? 'text-orange-500 fill-orange-500' : colorClass} />;
+      return <Flame size={size} className={isUnlocked ? 'text-amber-500 fill-amber-500' : colorClass} />;
     case 'm-3d':
       return <Lightning size={size} weight={weight} className={isUnlocked ? 'text-yellow-400' : colorClass} />;
     case 'm-5d':
@@ -131,7 +131,7 @@ export const HabitBreakerScreen: React.FC<HabitBreakerScreenProps> = ({
             particleCount: 75,
             spread: 70,
             origin: { y: 0.6 },
-            colors: ['#ffd700', '#f26543', '#549646'],
+            colors: ['#F5B700', '#5C2454', '#90487B', '#FBBF24'],
           });
         } catch {
           // fallback
