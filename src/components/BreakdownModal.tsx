@@ -33,7 +33,7 @@ export const BreakdownModal: React.FC<BreakdownModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-white dark:bg-warm-900 rounded-2xl p-5 shadow-2xl border border-warm-200 dark:border-warm-800 transition-all animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-md bg-[#FFFCF6] dark:bg-warm-900 rounded-[28px] p-5 shadow-2xl border border-warm-200 dark:border-warm-800 transition-all animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between pb-3 border-b border-warm-100 dark:border-warm-800">
           <div>
             <h2 className="text-sm font-semibold text-warm-900 dark:text-warm-100">
@@ -62,7 +62,7 @@ export const BreakdownModal: React.FC<BreakdownModalProps> = ({
               onChange={(e) => setFirstStep(e.target.value)}
               placeholder="e.g. Open editor and write function signature..."
               autoFocus
-              className="w-full bg-warm-50 dark:bg-warm-850 text-warm-900 dark:text-warm-100 text-sm rounded-xl px-3.5 py-3 border border-warm-200 dark:border-warm-700 focus:outline-none focus:border-focus-600 dark:focus:border-focus-500"
+              className="w-full bg-warm-50 dark:bg-warm-850 text-warm-900 dark:text-warm-100 text-sm rounded-2xl px-3.5 py-3 border border-warm-200 dark:border-warm-700 focus:outline-none focus:border-focus-600 dark:focus:border-focus-500"
             />
           </div>
           <p className="text-[11px] text-warm-400 dark:text-warm-500 mt-2 flex items-center gap-1">
@@ -80,7 +80,7 @@ export const BreakdownModal: React.FC<BreakdownModalProps> = ({
             </button>
             <button
               type="submit"
-              className="flex items-center gap-1.5 px-4 py-2 bg-focus-600 hover:bg-focus-700 text-white text-sm font-medium rounded-xl transition-all shadow-sm"
+              className="flex items-center gap-1.5 btn-primary px-5 py-2 text-sm"
             >
               <Check className="w-4 h-4" />
               <span>Set First Step</span>

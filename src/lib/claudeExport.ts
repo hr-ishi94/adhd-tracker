@@ -13,6 +13,7 @@ const WHY_LABELS: Record<NonNullable<ReviewWhyReason>, string> = {
   no_time: 'Ran out of time / Unexpected interruptions',
   forgot: 'Forgot / Switched contexts mid-way',
   low_energy: 'Low physical or mental energy / Fatigue',
+  other: 'Other reason',
 };
 
 export function generateClaudeDailyAnalysis(appData: AppData, targetDate?: string): string {

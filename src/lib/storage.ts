@@ -10,7 +10,9 @@ import type {
   TodoItem,
   TodoPriority,
   HabitMilestone,
-  HabitQuitTracker
+  HabitQuitTracker,
+  Category,
+  Reward
 } from '../types';
 
 export const STORAGE_KEY = 'focus-app-data';
@@ -367,13 +369,66 @@ export const DEFAULT_STREAK: Streak = {
   lastPausedDate: null,
 };
 
+export const DEFAULT_TODOS: TodoItem[] = [
+  {
+    id: 'habit-tidy',
+    text: 'Tidy up bathroom and bedroom',
+    priority: 'A',
+    status: 'open',
+    coins: 30,
+    category: 'habit',
+    colorTheme: 'amber',
+    createdDate: getTodayDateString(),
+  },
+  {
+    id: 'habit-workout',
+    text: 'Physical activity (sports, workout, etc.)',
+    priority: 'B',
+    status: 'open',
+    coins: 40,
+    category: 'habit',
+    colorTheme: 'yellow',
+    createdDate: getTodayDateString(),
+  },
+  {
+    id: 'habit-hygiene',
+    text: 'Personal hygiene and skincare routine',
+    priority: 'C',
+    status: 'open',
+    coins: 50,
+    category: 'habit',
+    colorTheme: 'green',
+    createdDate: getTodayDateString(),
+  },
+  {
+    id: 'goal-system-design',
+    text: 'Architect scalable real-time streaming pipeline',
+    priority: 'A',
+    status: 'open',
+    coins: 100,
+    category: 'goal',
+    colorTheme: 'amber',
+    createdDate: getTodayDateString(),
+  },
+  {
+    id: 'goal-deep-work',
+    text: 'Complete 4 deep work focus blocks',
+    priority: 'B',
+    status: 'open',
+    coins: 60,
+    category: 'goal',
+    colorTheme: 'yellow',
+    createdDate: getTodayDateString(),
+  },
+];
+
 export const INITIAL_APP_DATA: AppData = {
   version: 4,
   routineBlocks: DEFAULT_WEEKDAY_BLOCKS,
   routineSets: DEFAULT_ROUTINE_SETS,
   routineSchedule: DEFAULT_ROUTINE_SCHEDULE,
   sprints: DEFAULT_SPRINTS,
-  todos: [],
+  todos: DEFAULT_TODOS,
   dailyLogs: {},
   brainDump: [],
   streak: DEFAULT_STREAK,
@@ -396,7 +451,34 @@ export const INITIAL_APP_DATA: AppData = {
     lastDate: getTodayDateString(),
     totalCompleted: 0,
   },
+  coins: 25982,
+  userName: 'Kendrick',
+  redemptions: [],
 };
+
+// Default checklist items per block category (used when a block has no custom subtasks)
+export const DEFAULT_SUBTASKS_BY_CATEGORY: Record<Category, string[]> = {
+  learning: ['Open notes & course', 'Watch / read one lesson', 'Write 3 key takeaways'],
+  gym: ['Wake up & hydrate', 'Morning workout', 'Shower & get ready', 'Read 10 pages', 'Healthy breakfast'],
+  office: ['Pick the one hard task', 'Phone on focus mode', 'Clear inbox once'],
+  project: ['Open the project', 'Ship one small change'],
+  review: ['Evening review', 'Plan tomorrow', 'Screens off'],
+  sleep: ['Lights out on time'],
+  personal: ['Tidy up 10 minutes', 'Call family', 'Groceries / errands'],
+};
+
+export function getBlockSubtasks(block: RoutineBlock): string[] {
+  return block.subtasks && block.subtasks.length > 0
+    ? block.subtasks
+    : DEFAULT_SUBTASKS_BY_CATEGORY[block.category] || [];
+}
+
+export const REWARDS_CATALOG: Reward[] = [
+  { id: 'reward-coffee', title: 'Coffee Treat', cost: 500, image: '/art/reward_coffee.png' },
+  { id: 'reward-movie', title: 'Movie Night', cost: 1000, image: '/art/reward_movie.png' },
+  { id: 'reward-game', title: 'Gaming Session', cost: 1500, image: '/art/reward_game.png' },
+  { id: 'reward-trip', title: 'Weekend Trip', cost: 5000, image: '/art/reward_trip.png' },
+];
 
 export function getTodayDateString(d: Date = new Date()): string {
   const year = d.getFullYear();
@@ -417,6 +499,8 @@ export function getEmptyDailyLog(dateStr: string): DailyLog {
     reviewWhy: null,
     notes: '',
     spendingPlanMatched: null,
+    mood: null,
+    subtaskDone: {},
   };
 }
 
@@ -474,7 +558,16 @@ export function loadAppData(): AppData {
       return s;
     });
 
-    const todos = Array.isArray(parsed.todos) ? parsed.todos : [];
+    let rawTodos = Array.isArray(parsed.todos) ? parsed.todos : [];
+    if (rawTodos.length === 0) {
+      rawTodos = DEFAULT_TODOS;
+    }
+    const todos: TodoItem[] = rawTodos.map((t) => ({
+      ...t,
+      coins: t.coins ?? (t.priority === 'A' ? 30 : t.priority === 'B' ? 40 : 50),
+      category: t.category ?? 'habit',
+      colorTheme: t.colorTheme ?? (t.priority === 'A' ? 'amber' : t.priority === 'B' ? 'yellow' : 'green'),
+    }));
 
     // Multiple habits migration
     let habitTrackers = parsed.habitTrackers;
@@ -512,6 +605,9 @@ export function loadAppData(): AppData {
         lastDate: getTodayDateString(),
         totalCompleted: 0,
       },
+      coins: typeof parsed.coins === 'number' ? parsed.coins : 25982,
+      userName: parsed.userName || 'Kendrick',
+      redemptions: Array.isArray(parsed.redemptions) ? parsed.redemptions : [],
     };
 
     return data;

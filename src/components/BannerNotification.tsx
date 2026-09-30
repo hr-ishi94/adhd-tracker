@@ -19,7 +19,7 @@ export const BannerNotification: React.FC<BannerNotificationProps> = ({
 
   return (
     <div className="fixed top-4 left-4 right-4 z-50 max-w-md mx-auto animate-in slide-in-from-top-4 duration-300">
-      <div className="bg-warm-900 text-white dark:bg-warm-100 dark:text-warm-900 rounded-2xl p-4 shadow-2xl border border-warm-700/50 dark:border-warm-300/50 flex flex-col gap-3">
+      <div className="bg-warm-800 text-white dark:bg-warm-100 dark:text-warm-900 rounded-[22px] p-4 shadow-2xl border border-warm-700/50 dark:border-warm-300/50 flex flex-col gap-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-focus-600 text-white rounded-xl">

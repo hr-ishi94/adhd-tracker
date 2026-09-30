@@ -11,9 +11,9 @@ export const BrainDumpFAB: React.FC<BrainDumpFABProps> = ({ onClick }) => {
       onClick={onClick}
       aria-label="Quick Brain Dump"
       title="Quick Brain Dump"
-      className="fixed z-50 right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] flex items-center justify-center w-12 h-12 bg-warm-900 dark:bg-warm-100 text-white dark:text-warm-900 rounded-full shadow-lifted hover:scale-105 active:scale-95 transition-all duration-200 group focus-visible:ring-4 focus-visible:ring-focus-400"
+      className="btn-primary fixed z-50 right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] w-12 h-12 !p-0 rounded-full group focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-focus-300"
     >
-      <Plus className="w-5 h-5 transition-transform group-hover:rotate-90 duration-200" />
+      <Plus className="w-5 h-5 stroke-[2.75] transition-transform group-hover:rotate-90 duration-200" />
     </button>
   );
 };

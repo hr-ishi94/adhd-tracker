@@ -14,6 +14,7 @@ export type RoutineBlock = {
   endTime: string;   // "07:00"
   category: Category;
   firstStep?: string; // Optional "First 10-minute step" breakdown
+  subtasks?: string[]; // Checklist items shown on the day schedule
 };
 
 export type BlockStatus = "done" | "skipped" | "pending";
@@ -29,10 +30,16 @@ export type ReviewWhyReason =
   | "no_time" 
   | "forgot" 
   | "low_energy" 
+  | "other"
   | null;
+
+export type ReviewMood = "great" | "good" | "okay" | "tough";
 
 export type TodoPriority = "A" | "B" | "C";
 export type TodoStatus = "open" | "done";
+
+export type TicketColorTheme = "amber" | "yellow" | "green" | "blue";
+export type TodoCategory = "habit" | "goal";
 
 export type TodoItem = {
   id: string;
@@ -42,6 +49,9 @@ export type TodoItem = {
   createdDate: string; // ISO date string (YYYY-MM-DD)
   completedDate?: string | null; // ISO date string (YYYY-MM-DD) when completed
   lastNudgeWeekKey?: string | null; // e.g. "2026-W38" to prevent repeated retro nagging
+  coins?: number; // Coin reward when completed (e.g. 30, 40, 50)
+  category?: TodoCategory; // "habit" for Daily habits or "goal" for Goals
+  colorTheme?: TicketColorTheme;
 };
 
 export type DailyLog = {
@@ -56,6 +66,8 @@ export type DailyLog = {
   notes?: string; // P1 #7: free-form evening reflection notes
   spendingPlanMatched?: boolean | null; // P2 #8: financial check-in toggle
   reviewCompletedAt?: string;
+  mood?: ReviewMood | null; // Evening review emoji check-in
+  subtaskDone?: Record<string, boolean>; // keyed by `${blockId}:${index}`
 };
 
 export type BrainDumpItem = {
@@ -63,6 +75,23 @@ export type BrainDumpItem = {
   text: string;
   createdAt: string; // ISO timestamp
   convertedToTask: boolean;
+  tag?: BrainDumpTag;
+};
+
+export type BrainDumpTag = "task" | "idea" | "worry" | "later" | "personal" | "work";
+
+export type Reward = {
+  id: string;
+  title: string;
+  cost: number;
+  image: string; // path under /art
+};
+
+export type RewardRedemption = {
+  id: string;
+  rewardId: string;
+  cost: number;
+  redeemedAt: string; // ISO timestamp
 };
 
 export type Streak = {
@@ -171,6 +200,9 @@ export type AppData = {
   habitTrackers?: HabitQuitTracker[]; // multiple bad habit cards
   dreamAssessment?: DreamAssessment | null; // Dream & Life Targets assessment
   pomodoroStats?: PomodoroStats;
+  coins?: number; // Total COS coins collected (default 25982)
+  userName?: string; // Display name on dashboard (default "Kendrick")
+  redemptions?: RewardRedemption[]; // Rewards Store history
 };
 
 export type ScreenTab = 
@@ -183,5 +215,7 @@ export type ScreenTab =
   | "review" 
   | "retro" 
   | "settings" 
-  | "roadmap";
+  | "roadmap"
+  | "profile"
+  | "schedule";
 
