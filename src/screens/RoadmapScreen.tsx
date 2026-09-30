@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
 import type { DreamAssessment, WeeklyPlan, LearningTopic } from '../types';
-import { 
-  Target, 
-  Sparkles, 
-  Check, 
-  RotateCcw, 
+import {
+  Sparkles,
+  Check,
+  RotateCcw,
   X,
   Flame,
-  CheckCircle2
+  ChevronDown,
+  Star,
+  Atom,
+  Network,
+  Hammer,
+  Plus,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { ART, SegmentedTabs, Checkbox, ProgressBar, HeroBanner, Page } from '../components/ui';
 
 interface RoadmapScreenProps {
   dreamAssessment?: DreamAssessment | null;
@@ -181,6 +186,61 @@ const SKILL_TEMPLATES: Record<string, { weeks4: string[]; weeks8: string[]; week
   },
 };
 
+
+// Cycling colored icon tiles for topic / sprint rows
+const TILE_STYLES = [
+  'bg-honey-200 text-warm-800 dark:bg-honey-900/50 dark:text-honey-200',
+  'bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-300',
+  'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300',
+  'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-300',
+];
+
+const badgeText = (title: string) => {
+  const words = title.replace(/[^A-Za-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean);
+  if (words.length === 0) return '•';
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+};
+
+const IconTile: React.FC<{ index: number; title: string }> = ({ index, title }) => {
+  const i = index % TILE_STYLES.length;
+  return (
+    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${TILE_STYLES[i]}`}>
+      {i === 0 && <span className="text-[13px] font-black tracking-tight">{badgeText(title)}</span>}
+      {i === 1 && <Atom className="w-5 h-5" />}
+      {i === 2 && <Network className="w-5 h-5" />}
+      {i === 3 && <Hammer className="w-5 h-5" />}
+    </div>
+  );
+};
+
+const ProgressRing: React.FC<{ value: number }> = ({ value }) => {
+  const r = 17;
+  const c = 2 * Math.PI * r;
+  const pct = Math.max(0, Math.min(100, value));
+  return (
+    <div className="relative w-10 h-10 shrink-0">
+      <svg viewBox="0 0 40 40" className="w-10 h-10 -rotate-90">
+        <circle cx="20" cy="20" r={r} fill="none" strokeWidth="4" className="stroke-warm-200 dark:stroke-warm-800" />
+        <circle
+          cx="20"
+          cy="20"
+          r={r}
+          fill="none"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - pct / 100)}
+          className="stroke-honey-400 transition-all duration-500"
+        />
+      </svg>
+      <Star className="absolute inset-0 m-auto w-4 h-4 text-honey-500 fill-honey-400" />
+    </div>
+  );
+};
+
+type RoadmapTab = 'current' | 'all';
+
 export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
   dreamAssessment,
   onUpdateDreamAssessment,
@@ -200,6 +260,7 @@ export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
   // Expanded week state
   const [expandedWeekId, setExpandedWeekId] = useState<string>('week-1');
   const [newTopicText, setNewTopicText] = useState<string>('');
+  const [tab, setTab] = useState<RoadmapTab>('current');
 
   const handleSelectPreset = (skill: string) => {
     setSelectedSkill(skill);
@@ -253,13 +314,14 @@ export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
     onUpdateDreamAssessment(newAssessment);
     setIsTakingAssessment(false);
     setExpandedWeekId('week-1');
+    setTab('current');
 
     try {
       confetti({
         particleCount: 80,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#5C2454', '#F5B700', '#90487B', '#FBBF24'],
+        colors: ['#E0621F', '#F5B700', '#F38B45', '#2F4A31'],
       });
     } catch {
       // fallback
@@ -280,6 +342,17 @@ export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
       ...dreamAssessment,
       weeklyPlans: updated,
     });
+  };
+
+  // Mark every step in a week done (or undo all if already done)
+  const handleToggleWeek = (weekId: string) => {
+    if (!dreamAssessment) return;
+    const updated = dreamAssessment.weeklyPlans.map((w) => {
+      if (w.id !== weekId) return w;
+      const allDone = w.topics.length > 0 && w.topics.every((t) => t.completed);
+      return { ...w, topics: w.topics.map((t) => ({ ...t, completed: !allDone })) };
+    });
+    onUpdateDreamAssessment({ ...dreamAssessment, weeklyPlans: updated });
   };
 
   const handleAddTopicToActiveWeek = (weekId: string) => {
@@ -328,34 +401,32 @@ export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
   const totalTopics = allTopics.length;
   const progressPercent = totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
 
+  const inputClass =
+    'w-full text-sm bg-warm-50 dark:bg-warm-900 border border-warm-200 dark:border-warm-800 rounded-xl px-3.5 py-2.5 text-warm-800 dark:text-warm-100 placeholder:text-warm-400 focus:outline-none focus:ring-2 focus:ring-focus-500/60';
+
   // -------------------------------------------------------------
   // VIEW 1: SUPER-SIMPLE 3-STEP SETUP (ZERO ANXIETY)
   // -------------------------------------------------------------
   if (isTakingAssessment) {
     return (
-      <div className="flex-1 max-w-md mx-auto w-full px-4 pt-3 pb-24 safe-top space-y-4">
-        {/* Simple Header */}
-        <div className="text-center space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-focus-100 dark:bg-focus-900/40 text-focus-700 dark:text-focus-300 text-xs font-bold">
-            <Sparkles className="w-3.5 h-3.5 text-focus-600" />
-            <span>Calm Skill Discovery</span>
+      <Page>
+        <HeroBanner src={ART.roadmapHero} className="h-[150px]">
+          <div className="px-5 pt-4 safe-top">
+            <h1 className="text-[24px] leading-tight font-extrabold tracking-tight text-warm-800">What will you master?</h1>
+            <p className="text-xs text-warm-700/80 mt-0.5 max-w-[220px]">
+              We'll break it into calm, bite-sized weekly steps.
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-warm-900 dark:text-warm-100 tracking-tight">
-            What will you master?
-          </h1>
-          <p className="text-xs text-warm-500 dark:text-warm-400 max-w-xs mx-auto">
-            Choose a target. We'll automatically break it down into calm, bite-sized weekly steps.
-          </p>
-        </div>
+        </HeroBanner>
 
-        <form onSubmit={handleBuildRoadmap} className="space-y-4">
+        <form onSubmit={handleBuildRoadmap} className="px-4 -mt-6 relative z-20 space-y-3">
           {/* STEP 1: CHOOSE TARGET SKILL */}
-          <div className="bg-white dark:bg-warm-850 p-4 rounded-3xl border border-warm-200/90 dark:border-warm-800 shadow-soft space-y-3">
-            <label className="text-xs font-black uppercase text-warm-500 dark:text-warm-400 tracking-wider block">
-              1. Select or Type Your Skill
+          <div className="card p-4 space-y-3">
+            <label className="text-[15px] font-bold text-warm-800 dark:text-warm-100 block">
+              1. Select or type your skill
             </label>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-wrap gap-2">
               {Object.keys(SKILL_TEMPLATES).map((skillName) => {
                 const isSelected = !isCustomSkill && selectedSkill === skillName;
                 return (
@@ -363,90 +434,61 @@ export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
                     key={skillName}
                     type="button"
                     onClick={() => handleSelectPreset(skillName)}
-                    className={`p-2.5 rounded-2xl text-left border text-xs font-bold transition-all flex items-center justify-between ${
-                      isSelected
-                        ? 'border-focus-500 bg-focus-50 dark:bg-focus-950/60 text-focus-800 dark:text-focus-300 shadow-xs'
-                        : 'border-warm-200/80 dark:border-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-50'
-                    }`}
+                    className={`chip inline-flex items-center gap-1 ${isSelected ? 'chip-active' : ''}`}
                   >
-                    <span className="truncate">{skillName}</span>
-                    {isSelected && <Check className="w-3.5 h-3.5 text-focus-600 shrink-0 ml-1" />}
+                    {isSelected && <Check className="w-3.5 h-3.5" />}
+                    <span>{skillName}</span>
                   </button>
                 );
               })}
-            </div>
-
-            {/* Custom Option */}
-            <div className="pt-1">
               <button
                 type="button"
                 onClick={() => setIsCustomSkill(true)}
-                className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition-all ${
-                  isCustomSkill 
-                    ? 'border-focus-500 bg-focus-50 dark:bg-focus-950/60 text-focus-700' 
-                    : 'border-warm-200 dark:border-warm-800 text-warm-500'
-                }`}
+                className={`chip inline-flex items-center gap-1 ${isCustomSkill ? 'chip-active' : ''}`}
               >
-                + Custom Skill
+                <Plus className="w-3.5 h-3.5" />
+                <span>Custom skill</span>
               </button>
-
-              {isCustomSkill && (
-                <input
-                  type="text"
-                  required={isCustomSkill}
-                  placeholder="e.g. 3D Modeling, Python Automation, Piano..."
-                  value={customSkillInput}
-                  onChange={(e) => setCustomSkillInput(e.target.value)}
-                  className="mt-2 w-full text-sm font-semibold bg-warm-50 dark:bg-warm-900 border border-warm-200 dark:border-warm-800 rounded-xl px-3.5 py-2.5 text-warm-900 dark:text-warm-100 focus:outline-none focus:ring-2 focus:ring-focus-500"
-                />
-              )}
             </div>
+
+            {isCustomSkill && (
+              <input
+                type="text"
+                required={isCustomSkill}
+                placeholder="e.g. 3D Modeling, Python Automation, Piano..."
+                value={customSkillInput}
+                onChange={(e) => setCustomSkillInput(e.target.value)}
+                className={inputClass}
+              />
+            )}
           </div>
 
           {/* STEP 2: CHOOSE PACE */}
-          <div className="bg-white dark:bg-warm-850 p-4 rounded-3xl border border-warm-200/90 dark:border-warm-800 shadow-soft space-y-3">
-            <label className="text-xs font-black uppercase text-warm-500 dark:text-warm-400 tracking-wider block">
-              2. Choose Your Pace
-            </label>
-
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { weeks: 4, label: '4 Weeks', sub: 'Fast Sprint' },
-                { weeks: 8, label: '8 Weeks', sub: 'Recommended' },
-                { weeks: 12, label: '12 Weeks', sub: 'Deep Mastery' },
-              ].map((item) => (
-                <button
-                  key={item.weeks}
-                  type="button"
-                  onClick={() => setWeeksChoice(item.weeks)}
-                  className={`p-3 rounded-2xl border text-center transition-all ${
-                    weeksChoice === item.weeks
-                      ? 'border-focus-500 bg-focus-600 text-white shadow-lifted'
-                      : 'border-warm-200/80 dark:border-warm-800 bg-warm-50/50 dark:bg-warm-900/40 text-warm-700 dark:text-warm-300'
-                  }`}
-                >
-                  <span className="block text-sm font-black leading-tight">{item.label}</span>
-                  <span className={`text-[10px] font-bold block mt-0.5 ${
-                    weeksChoice === item.weeks ? 'text-focus-100' : 'text-warm-400'
-                  }`}>
-                    {item.sub}
-                  </span>
-                </button>
-              ))}
-            </div>
+          <div className="card p-4 space-y-3">
+            <label className="text-[15px] font-bold text-warm-800 dark:text-warm-100 block">2. Choose your pace</label>
+            <SegmentedTabs
+              options={[
+                { id: '4', label: '4 weeks' },
+                { id: '8', label: '8 weeks' },
+                { id: '12', label: '12 weeks' },
+              ]}
+              value={String(weeksChoice) as '4' | '8' | '12'}
+              onChange={(id) => setWeeksChoice(Number(id))}
+            />
+            <p className="text-xs text-warm-500 dark:text-warm-400 text-center">
+              {weeksChoice === 4 ? 'Fast sprint' : weeksChoice === 12 ? 'Deep mastery' : 'Recommended pace'}
+            </p>
           </div>
 
           {/* STEP 3: MOTIVATION ANCHOR */}
-          <div className="bg-white dark:bg-warm-850 p-4 rounded-3xl border border-warm-200/90 dark:border-warm-800 shadow-soft space-y-2">
-            <label className="text-xs font-black uppercase text-warm-500 dark:text-warm-400 tracking-wider block">
-              3. Your Motivation / 'Why'
-            </label>
+          <div className="card p-4 space-y-2">
+            <label className="text-[15px] font-bold text-warm-800 dark:text-warm-100 block">3. Your motivation / 'why'</label>
             <input
               type="text"
               value={motivationText}
               onChange={(e) => setMotivationText(e.target.value)}
               placeholder="Why does mastering this matter to you?"
-              className="w-full text-xs sm:text-sm bg-warm-50 dark:bg-warm-900 border border-warm-200 dark:border-warm-800 rounded-xl px-3.5 py-2.5 text-warm-900 dark:text-warm-100 focus:outline-none focus:ring-2 focus:ring-focus-500"
+              className={inputClass}
             />
           </div>
 
@@ -456,206 +498,242 @@ export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
               <button
                 type="button"
                 onClick={() => setIsTakingAssessment(false)}
-                className="py-3.5 px-4 rounded-2xl bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 font-bold text-xs"
+                className="py-3.5 px-5 rounded-full bg-warm-200/70 dark:bg-warm-800 text-warm-700 dark:text-warm-300 font-bold text-sm"
               >
                 Cancel
               </button>
             )}
-            <button
-              type="submit"
-              className="flex-1 py-4 rounded-2xl bg-focus-600 hover:bg-focus-700 text-white font-black text-sm shadow-lifted active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-            >
+            <button type="submit" className="btn-primary flex-1 py-3.5 text-sm">
               <Sparkles className="w-4 h-4" />
               <span>Generate My Roadmap</span>
             </button>
           </div>
         </form>
-      </div>
+      </Page>
     );
   }
 
   // -------------------------------------------------------------
-  // VIEW 2: ULTRA-CALM ROADMAP (ONE WEEK FOCUS AT A TIME)
+  // VIEW 2: ROADMAP (ONE SPRINT / WEEK FOCUS AT A TIME)
   // -------------------------------------------------------------
-  const activeWeek = dreamAssessment?.weeklyPlans.find((w) => w.id === expandedWeekId) || dreamAssessment?.weeklyPlans[0];
+  const weeklyPlans = dreamAssessment?.weeklyPlans || [];
+  const activeWeek = weeklyPlans.find((w) => w.id === expandedWeekId) || weeklyPlans[0];
+  const totalWeeks = weeklyPlans.length || dreamAssessment?.targetWeeks || 0;
+  const weekDone = activeWeek ? activeWeek.topics.filter((t) => t.completed).length : 0;
+  const weekTotal = activeWeek ? activeWeek.topics.length : 0;
+  const weekPercent = weekTotal > 0 ? Math.round((weekDone / weekTotal) * 100) : 0;
+  const rewardCoins = Math.max(1, weekTotal) * 50;
+
+  const rowBase = 'flex items-center gap-3 py-3 border-b border-warm-200/70 dark:border-warm-800 last:border-b-0';
 
   return (
-    <div className="flex-1 max-w-md mx-auto w-full px-4 pt-3 pb-28 safe-top space-y-4">
-      {/* Hero Overview Card matching reference design */}
-      <div className="glass-card-warm rounded-[28px] p-5 border border-white/70 dark:border-white/10 shadow-lifted space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-focus-100 dark:bg-focus-950/80 text-focus-800 dark:text-focus-300 text-xs font-black uppercase tracking-wider border border-focus-300/50">
-            <Target className="w-3.5 h-3.5 text-focus-600" />
-            <span>Target Goal</span>
-          </div>
-
-          <button
-            onClick={() => setIsTakingAssessment(true)}
-            className="text-xs font-bold text-focus-700 dark:text-focus-400 hover:underline flex items-center gap-1"
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span>Change Skill</span>
-          </button>
-        </div>
-
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-warm-900 dark:text-warm-100 tracking-tight leading-tight">
-            {dreamAssessment?.dreamTitle}
-          </h1>
-          {dreamAssessment?.motivation && (
-            <p className="text-xs text-warm-600 dark:text-warm-300 italic mt-1 leading-relaxed">
-              "{dreamAssessment.motivation}"
-            </p>
-          )}
-        </div>
-
-        {/* Calm Progress Bar */}
-        <div className="pt-1 space-y-1.5">
-          <div className="flex items-center justify-between text-xs font-bold">
-            <span className="text-warm-600 dark:text-warm-300">
-              Mastery: <strong className="text-focus-600 dark:text-focus-400 font-black">{progressPercent}%</strong>
-            </span>
-            <span className="text-warm-500 font-medium">
-              {completedTopics} of {totalTopics} items completed
-            </span>
-          </div>
-
-          <div className="w-full h-2.5 rounded-full bg-warm-200 dark:bg-warm-800 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-focus-500 to-leaf-500 transition-all duration-500"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Quick Launch Pomodoro */}
-        {onStartPomodoro && (
-          <button
-            onClick={onStartPomodoro}
-            className="w-full py-3 rounded-2xl bg-white dark:bg-warm-800 border border-focus-200 dark:border-focus-800 text-focus-700 dark:text-focus-300 font-black text-xs shadow-xs hover:border-focus-400 flex items-center justify-center gap-2 active:scale-98 transition-all"
-          >
-            <Flame className="w-4 h-4 text-focus-600" />
-            <span>Start 25m Focus Sprint on This Week →</span>
-          </button>
-        )}
-      </div>
-
-      {/* Week Selector Chips (Single-tap to switch active week without cognitive overload) */}
-      <div className="space-y-1.5">
-        <span className="text-xs font-bold text-warm-500 dark:text-warm-400 px-1 uppercase tracking-wider block">
-          Select Milestone Week:
-        </span>
-        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {dreamAssessment?.weeklyPlans.map((w) => {
-            const isSelected = w.id === activeWeek?.id;
-            const isWeekDone = w.topics.length > 0 && w.topics.every((t) => t.completed);
-
-            return (
-              <button
-                key={w.id}
-                onClick={() => setExpandedWeekId(w.id)}
-                className={`px-3.5 py-2 rounded-2xl text-xs font-extrabold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 border ${
-                  isSelected
-                    ? 'bg-focus-600 text-white border-focus-600 shadow-sm scale-105'
-                    : isWeekDone
-                      ? 'bg-leaf-100 text-leaf-800 dark:bg-leaf-950 dark:text-leaf-300 border-leaf-300'
-                      : 'glass-card text-warm-700 dark:text-warm-300 border-white/60 dark:border-warm-800'
-                }`}
-              >
-                {isWeekDone && <CheckCircle2 className="w-3.5 h-3.5" />}
-                <span>Week {w.weekNumber}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ACTIVE WEEK FOCUS CARD (Only 1 week highlighted at a time to prevent ADHD anxiety) */}
-      {activeWeek && (
-        <div className="glass-card rounded-[28px] p-5 border border-white/70 dark:border-white/10 shadow-lifted space-y-4">
-          <div className="flex items-start justify-between gap-2 border-b border-warm-100 dark:border-warm-800 pb-3">
-            <div>
-              <span className="text-[11px] font-black uppercase tracking-wider text-focus-600 dark:text-focus-400">
-                Week {activeWeek.weekNumber} Milestone
-              </span>
-              <h2 className="text-lg font-black text-warm-900 dark:text-warm-100 leading-snug mt-0.5">
-                {activeWeek.skillTitle}
-              </h2>
-            </div>
-            <span className="text-xs font-bold text-warm-500 bg-warm-100 dark:bg-warm-800 px-2.5 py-1 rounded-xl shrink-0">
-              {activeWeek.topics.filter((t) => t.completed).length} / {activeWeek.topics.length} Done
-            </span>
-          </div>
-
-          {/* Checkable Action Steps */}
-          <div className="space-y-2">
-            {activeWeek.topics.map((topic) => (
-              <div
-                key={topic.id}
-                className={`p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
-                  topic.completed
-                    ? 'bg-leaf-50/50 dark:bg-leaf-950/30 border-leaf-200 dark:border-leaf-900/60'
-                    : 'bg-warm-50/80 dark:bg-warm-900/60 border-warm-200/70 dark:border-warm-800'
-                }`}
-              >
-                <label className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={topic.completed}
-                    onChange={() => handleToggleTopic(activeWeek.id, topic.id)}
-                    className="w-5 h-5 rounded-lg accent-focus-600 cursor-pointer"
-                  />
-                  <span className={`text-xs sm:text-sm font-semibold leading-snug ${
-                    topic.completed
-                      ? 'line-through text-warm-400 dark:text-warm-500'
-                      : 'text-warm-900 dark:text-warm-100'
-                  }`}>
-                    {topic.title}
-                  </span>
-                </label>
-
-                <button
-                  onClick={() => handleDeleteTopic(activeWeek.id, topic.id)}
-                  className="text-warm-400 hover:text-red-500 p-1 shrink-0"
-                  title="Remove item"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Quick 1-tap Add Step */}
-          <div className="flex gap-2 pt-1">
-            <input
-              type="text"
-              placeholder="Add step or exercise..."
-              value={newTopicText}
-              onChange={(e) => setNewTopicText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddTopicToActiveWeek(activeWeek.id);
-                }
+    <Page>
+      <HeroBanner src={ART.roadmapHero} className="h-[150px]">
+        <div className="flex items-start justify-between gap-3 px-5 pt-4 safe-top">
+          <h1 className="text-[24px] leading-tight font-extrabold tracking-tight text-warm-800">Learning Roadmap</h1>
+          <label className="relative shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/95 text-warm-800 text-xs font-semibold shadow-sm cursor-pointer">
+            <span>{dreamAssessment?.targetWeeks || totalWeeks}-week plan</span>
+            <ChevronDown className="w-3.5 h-3.5 text-warm-500" />
+            <select
+              aria-label="Select sprint week"
+              value={activeWeek?.id || ''}
+              onChange={(e) => {
+                setExpandedWeekId(e.target.value);
+                setTab('current');
               }}
-              className="flex-1 text-xs sm:text-sm bg-warm-50 dark:bg-warm-900 border border-warm-200 dark:border-warm-800 rounded-xl px-3 py-2 text-warm-900 dark:text-warm-100 focus:outline-none focus:ring-2 focus:ring-focus-500"
-            />
-            <button
-              onClick={() => handleAddTopicToActiveWeek(activeWeek.id)}
-              className="px-4 py-2 bg-focus-600 hover:bg-focus-700 text-white rounded-xl text-xs font-bold active:scale-95 transition-all shadow-xs shrink-0"
+              className="absolute inset-0 opacity-0 cursor-pointer"
             >
-              + Add
+              {weeklyPlans.map((w) => (
+                <option key={w.id} value={w.id}>
+                  Week {w.weekNumber}: {w.skillTitle}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </HeroBanner>
+
+      <div className="px-4 -mt-8 relative z-20 space-y-3">
+        {/* Summary card */}
+        <div className="card p-4">
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-[15px] font-bold text-warm-800 dark:text-warm-50 truncate">{dreamAssessment?.dreamTitle}</h2>
+              <p className="text-xs text-warm-500 dark:text-warm-400 mt-0.5">
+                Week {activeWeek?.weekNumber ?? 1} of {totalWeeks}
+              </p>
+            </div>
+            <ProgressRing value={progressPercent} />
+            <span className="text-[15px] font-extrabold text-warm-800 dark:text-warm-50 w-10 text-right">{progressPercent}%</span>
+          </div>
+          <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-warm-200/70 dark:border-warm-800">
+            <p className="text-xs text-warm-500 dark:text-warm-400 italic truncate">
+              {dreamAssessment?.motivation ? `"${dreamAssessment.motivation}"` : `${completedTopics} of ${totalTopics} steps done`}
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsTakingAssessment(true)}
+              className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-focus-600 dark:text-focus-400"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Change</span>
             </button>
           </div>
         </div>
-      )}
 
-      {/* Compassionate ADHD tip */}
-      <div className="p-3.5 rounded-2xl bg-warm-100/60 dark:bg-warm-850/60 border border-warm-200/70 dark:border-warm-800 text-center">
-        <p className="text-xs text-warm-600 dark:text-warm-400 font-medium">
-          💡 <strong>ADHD Tip:</strong> Only focus on today's single action step in Week {activeWeek?.weekNumber}. Ignore future weeks until you get there!
+        {/* Sprint list container */}
+        <div className="card p-4">
+          <SegmentedTabs<RoadmapTab>
+            options={[
+              { id: 'current', label: 'Current Sprint' },
+              { id: 'all', label: 'All Sprints' },
+            ]}
+            value={tab}
+            onChange={setTab}
+          />
+
+          {tab === 'current' && activeWeek && (
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-warm-500 dark:text-warm-400 px-0.5">
+                Week {activeWeek.weekNumber} · {activeWeek.skillTitle}
+              </p>
+
+              <div className="mt-1">
+                {activeWeek.topics.map((topic, idx) => (
+                  <div key={topic.id} className={rowBase}>
+                    <IconTile index={idx} title={topic.title} />
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`text-sm font-bold leading-snug ${
+                          topic.completed ? 'line-through text-warm-400 dark:text-warm-500' : 'text-warm-800 dark:text-warm-50'
+                        }`}
+                      >
+                        {topic.title}
+                      </p>
+                      <p className="text-xs text-warm-500 dark:text-warm-400 mt-0.5">
+                        Step {idx + 1} of {weekTotal} · {topic.completed ? 'Done' : 'To do'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteTopic(activeWeek.id, topic.id)}
+                      className="text-warm-400 hover:text-rose-500 p-1 shrink-0"
+                      title="Remove item"
+                      aria-label="Remove item"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                    <Checkbox
+                      checked={topic.completed}
+                      onChange={() => handleToggleTopic(activeWeek.id, topic.id)}
+                      label={`Mark ${topic.title} complete`}
+                    />
+                  </div>
+                ))}
+                {activeWeek.topics.length === 0 && (
+                  <p className="text-xs text-warm-500 dark:text-warm-400 py-4 text-center">No steps yet — add one below.</p>
+                )}
+              </div>
+
+              {/* Quick 1-tap Add Step */}
+              <div className="flex gap-2 pt-3">
+                <input
+                  type="text"
+                  placeholder="Add step or exercise..."
+                  value={newTopicText}
+                  onChange={(e) => setNewTopicText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddTopicToActiveWeek(activeWeek.id);
+                    }
+                  }}
+                  className={`${inputClass} flex-1 py-2`}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleAddTopicToActiveWeek(activeWeek.id)}
+                  className="btn-pill shrink-0 px-4"
+                >
+                  + Add
+                </button>
+              </div>
+
+              {onStartPomodoro && (
+                <button type="button" onClick={onStartPomodoro} className="btn-primary w-full py-3 mt-3 text-sm">
+                  <Flame className="w-4 h-4" />
+                  <span>Start 25m Focus Sprint</span>
+                </button>
+              )}
+            </div>
+          )}
+
+          {tab === 'all' && (
+            <div className="mt-2">
+              {weeklyPlans.map((w, idx) => {
+                const done = w.topics.filter((t) => t.completed).length;
+                const isWeekDone = w.topics.length > 0 && done === w.topics.length;
+                const isActive = w.id === activeWeek?.id;
+                return (
+                  <div key={w.id} className={rowBase}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExpandedWeekId(w.id);
+                        setTab('current');
+                      }}
+                      className="flex items-center gap-3 min-w-0 flex-1 text-left"
+                    >
+                      <IconTile index={idx} title={w.skillTitle} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-warm-800 dark:text-warm-50 leading-snug truncate">
+                          {w.skillTitle}
+                        </p>
+                        <p className="text-xs text-warm-500 dark:text-warm-400 mt-0.5">
+                          Week {w.weekNumber} · {done} / {w.topics.length} steps
+                          {isActive && <span className="text-focus-600 dark:text-focus-400 font-semibold"> · Current</span>}
+                        </p>
+                      </div>
+                    </button>
+                    <Checkbox
+                      checked={isWeekDone}
+                      onChange={() => handleToggleWeek(w.id)}
+                      label={`Mark week ${w.weekNumber} complete`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Milestone Reward */}
+        {activeWeek && (
+          <div className="card p-4">
+            <div className="flex items-center gap-3">
+              <div className="min-w-0 flex-1">
+                <h3 className="text-[15px] font-bold text-warm-800 dark:text-warm-50">Milestone Reward</h3>
+                <p className="text-xs text-warm-500 dark:text-warm-400 mt-0.5">Complete this sprint to earn</p>
+              </div>
+              <img src={ART.chest} alt="" aria-hidden="true" className="w-12 h-12 object-contain shrink-0 select-none" />
+            </div>
+            <div className="flex items-center gap-2 mt-3">
+              <ProgressBar
+                value={weekPercent}
+                className="h-2.5 flex-1 bg-warm-200 dark:bg-warm-800"
+                barClassName="bg-gradient-to-r from-honey-400 to-focus-500"
+              />
+              <span className="text-[11px] font-semibold text-warm-500 dark:text-warm-400 whitespace-nowrap">{rewardCoins} coins</span>
+              <span className="text-xs font-extrabold text-warm-800 dark:text-warm-50 w-9 text-right">{weekPercent}%</span>
+            </div>
+          </div>
+        )}
+
+        {/* Compassionate ADHD tip */}
+        <p className="text-xs text-warm-500 dark:text-warm-400 text-center px-4 pt-1">
+          Only focus on today's single step in Week {activeWeek?.weekNumber}. Future weeks can wait.
         </p>
       </div>
-    </div>
+    </Page>
   );
 };

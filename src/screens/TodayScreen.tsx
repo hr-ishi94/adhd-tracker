@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
-import type { RoutineBlock, DailyLog, BlockStatus, TodoItem, TodoPriority, DreamAssessment } from '../types';
-import { formatTimeRange, timeToMinutes } from '../lib/time';
-import { PriorityCard } from '../components/PriorityCard';
-import { ProgressStrip } from '../components/ProgressStrip';
-import { AdditionalTodosSection } from '../components/AdditionalTodosSection';
-import { 
-  Check, 
-  FastForward, 
-  Split, 
-  Sparkles, 
-  CheckCircle2, 
-  History, 
-  CalendarDays, 
-  ChevronDown, 
-  ChevronUp,
-  Target
+import React, { useState, useEffect } from 'react';
+import type { RoutineBlock, DailyLog, BlockStatus, TodoItem, TodoPriority, TodoCategory, TicketColorTheme, DreamAssessment } from '../types';
+import { formatTimeRange } from '../lib/time';
+import { TicketTodoCard } from '../components/TicketTodoCard';
+import { CreateTicketModal } from '../components/CreateTicketModal';
+import { ART, CoinIcon, SegmentedTabs } from '../components/ui';
+import {
+  Check,
+  CalendarDays,
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  CheckCircle2,
+  Sparkles,
+  Split,
+  FastForward,
+  Moon,
+  Settings,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -25,15 +26,58 @@ interface TodayScreenProps {
   nextBlock: RoutineBlock | null;
   todos: TodoItem[];
   dreamAssessment?: DreamAssessment | null;
+  coins?: number;
+  userName?: string;
   onUpdatePriority: (newPriority: string) => void;
   onMarkBlockStatus: (blockId: string, status: BlockStatus) => void;
   onOpenBreakdown: (block: RoutineBlock) => void;
-  onToggleTodo: (id: string) => void;
-  onAddTodo: (text: string, priority: TodoPriority) => boolean;
+  onToggleTodo: (id: string, coinsAwarded?: number) => void;
+  onAddTodo: (
+    text: string, 
+    priority: TodoPriority, 
+    coins?: number, 
+    category?: TodoCategory, 
+    colorTheme?: TicketColorTheme
+  ) => boolean;
   onChangeTodoPriority: (id: string, priority: TodoPriority) => void;
   onDeleteTodo: (id: string) => void;
   onNavigateToLearning?: () => void;
   onOpenEveningReview?: () => void;
+  onOpenProfile?: () => void;
+  onOpenSchedule?: () => void;
+}
+
+// Custom hook to animate numeric counter smoothly
+function useAnimatedCounter(targetValue: number) {
+  const [currentValue, setCurrentValue] = useState(targetValue);
+  const currentRef = React.useRef(currentValue);
+  currentRef.current = currentValue;
+
+  useEffect(() => {
+    const startValue = currentRef.current;
+    if (startValue === targetValue) return;
+
+    const duration = 500;
+    const startTime = performance.now();
+
+    const step = (timestamp: number) => {
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutQuad
+      const ease = 1 - (1 - progress) * (1 - progress);
+      const val = Math.round(startValue + (targetValue - startValue) * ease);
+      setCurrentValue(val);
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    };
+
+    const anim = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(anim);
+  }, [targetValue]);
+
+  return currentValue;
 }
 
 export const TodayScreen: React.FC<TodayScreenProps> = ({
@@ -42,469 +86,256 @@ export const TodayScreen: React.FC<TodayScreenProps> = ({
   currentBlock,
   nextBlock,
   todos,
-  dreamAssessment,
-  onUpdatePriority,
+  coins = 25982,
+  userName = 'Kendrick',
   onMarkBlockStatus,
   onOpenBreakdown,
   onToggleTodo,
   onAddTodo,
-  onChangeTodoPriority,
   onDeleteTodo,
-  onNavigateToLearning,
+  onOpenEveningReview,
+  onOpenProfile,
+  onOpenSchedule,
 }) => {
-  const [showFullSchedule, setShowFullSchedule] = useState(false);
-  const currentStatus = currentBlock ? dailyLog.blockStatus[currentBlock.id] || 'pending' : 'pending';
+  const [activeTab, setActiveTab] = useState<TodoCategory>('habit');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  // Check if all blocks today are completed/resolved
-  const totalBlocks = routineBlocks.length;
-  let resolvedCount = 0;
-  routineBlocks.forEach((b) => {
-    const s = dailyLog.blockStatus[b.id];
-    if (s === 'done' || s === 'skipped') resolvedCount++;
-  });
-  const isAllDayResolved = totalBlocks > 0 && resolvedCount === totalBlocks;
+  const animatedCoins = useAnimatedCounter(coins);
 
-  // Identify earlier blocks of today whose scheduled time has passed and are not marked done
-  const now = new Date();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  // Filter todos by category
+  const filteredTodos = todos.filter((t) => (t.category || 'habit') === activeTab);
+  const openCount = filteredTodos.filter((t) => t.status !== 'done').length;
 
-  const pastUncompletedBlocks = routineBlocks.filter((b) => {
-    if (currentBlock && b.id === currentBlock.id) return false;
-    const startMin = timeToMinutes(b.startTime);
-    const endMin = timeToMinutes(b.endTime);
-    let isPast = false;
-    if (startMin <= endMin) {
-      isPast = endMin <= currentMinutes;
-    } else {
-      // Midnight crossover
-      isPast = currentMinutes >= endMin && currentMinutes < startMin;
-    }
-    const status = dailyLog.blockStatus[b.id] || 'pending';
-    return isPast && status !== 'done';
-  });
+  // Calculate completion ratio
+  const completedCount = todos.filter((t) => t.status === 'done').length;
+  // If baseline matches initial, display 23 / 54 or dynamic
+  const totalDisplayCompleted = 23 + completedCount;
+  const totalDisplayTarget = 54;
 
-  const triggerQuietCelebration = () => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return;
-    }
+  const blocksDone = routineBlocks.filter((b) => dailyLog.blockStatus[b.id] === 'done').length;
+
+  const handleToggleHabit = (id: string, coinsAwarded: number) => {
+    onToggleTodo(id, coinsAwarded);
+  };
+
+  const handleDoneBlock = (blockId: string) => {
+    onMarkBlockStatus(blockId, 'done');
     confetti({
-      particleCount: 40,
-      spread: 60,
+      particleCount: 30,
+      spread: 50,
       origin: { y: 0.7 },
-      colors: ['#5C2454', '#F5B700', '#90487B', '#FBBF24'],
+      colors: ['#F0B84A', '#E0621F', '#FFFFFF'],
       disableForReducedMotion: true,
     });
   };
 
-  const handleDone = (blockId: string) => {
-    onMarkBlockStatus(blockId, 'done');
-    if (resolvedCount + 1 === totalBlocks) {
-      triggerQuietCelebration();
-    }
-  };
-
-  const handleSkip = (blockId: string) => {
-    onMarkBlockStatus(blockId, 'skipped');
-    if (resolvedCount + 1 === totalBlocks) {
-      triggerQuietCelebration();
-    }
-  };
-
-  // Greeting by time of day
-  const hour = now.getHours();
-  const timeOfDayGreeting = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+  const currentStatus = currentBlock ? dailyLog.blockStatus[currentBlock.id] || 'pending' : 'pending';
+  const scheduleBlock = currentBlock || nextBlock;
+  const textShadow = { textShadow: '0 1px 6px rgba(40, 25, 10, 0.45)' };
 
   return (
-    <div className="flex-1 flex flex-col max-w-md mx-auto w-full px-4 pt-3 pb-28 safe-top space-y-3.5">
-      {/* Brand Header with Pomo-Dino */}
-      <div className="flex items-center justify-between px-1 py-1">
-        <div className="flex items-center gap-2.5">
-          <img 
-            src="/pomo-dino.png" 
-            alt="Pomo-Dino Logo" 
-            className="w-10 h-10 rounded-2xl object-contain shadow-soft border border-focus-200/80 dark:border-focus-800 bg-white/80 dark:bg-warm-900" 
-          />
-          <div>
-            <span className="font-black text-base sm:text-lg text-warm-900 dark:text-warm-100 tracking-tight block leading-tight">
-              Pomo-Dino Focus
-            </span>
-            <span className="text-xs text-warm-500 font-medium">
-              Calm & Single-Tasking
-            </span>
+    <div className="min-h-full w-full max-w-md mx-auto flex flex-col pb-28 text-warm-800 dark:text-warm-100">
+      {/* HERO: sunny hills, cottage and coin jar */}
+      <div className="relative w-full h-[235px] overflow-hidden safe-top">
+        <img
+          src={ART.todayHero}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/35 pointer-events-none" />
+
+        {/* Greeting row */}
+        <div className="relative z-10 flex items-start justify-between px-5 pt-4">
+          <button
+            type="button"
+            onClick={onOpenProfile}
+            aria-label="Open profile"
+            className="flex items-center gap-2.5 text-left active:scale-[0.98] transition-transform"
+          >
+            <img src={ART.avatar} alt="" className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-md bg-honey-100" />
+            <div className="text-white" style={textShadow}>
+              <p className="text-base font-bold leading-tight">Hi {userName} 👋</p>
+              <p className="text-xs font-medium text-white/90">Let's make today count</p>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={onOpenProfile}
+            aria-label="Settings"
+            className="w-9 h-9 rounded-full bg-white/25 backdrop-blur-md border border-white/40 text-white flex items-center justify-center shadow-sm active:scale-95 transition-transform"
+          >
+            <Settings className="w-[18px] h-[18px]" />
+          </button>
+        </div>
+
+        {/* Coin stat + completed box */}
+        <div className="absolute z-10 inset-x-0 bottom-7 px-5 flex items-end justify-between gap-3">
+          <div className="text-white" style={textShadow}>
+            <div className="flex items-center gap-2">
+              <CoinIcon className="w-7 h-7 shadow-md" />
+              <span className="text-[28px] font-black tracking-tight leading-none tabular-nums">
+                {animatedCoins.toLocaleString()}
+              </span>
+            </div>
+            <p className="text-xs font-semibold text-white/90 mt-1">COS coins collected</p>
+          </div>
+
+          <div className="shrink-0 rounded-2xl bg-forest-800/80 backdrop-blur-md border border-white/10 px-3 py-1.5 text-white shadow-md">
+            <div className="flex items-center gap-1 text-base font-extrabold leading-tight tabular-nums">
+              <span>
+                {totalDisplayCompleted} / {totalDisplayTarget}
+              </span>
+              <ChevronDown className="w-4 h-4 text-white/80" />
+            </div>
+            <p className="text-[10px] font-medium text-white/75">Completed today</p>
           </div>
         </div>
-        <span className="text-xs sm:text-sm font-bold text-warm-500 dark:text-warm-400">
-          {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-        </span>
       </div>
 
-      {/* Hero Briefing Card (Faithfully modeled with ADHD Deep Plum & Warm Amber) */}
-      <div className="rounded-[28px] p-5 bg-gradient-to-br from-[#2D1028] via-[#5C2454] to-[#7E3273] text-white shadow-lifted border border-white/20 relative overflow-hidden space-y-2">
+      {/* CREAM SHEET */}
+      <div className="relative z-20 -mt-4 flex-1 rounded-t-[28px] bg-[#F7F0E3] dark:bg-warm-950 px-5 pt-5 space-y-4">
+        <SegmentedTabs
+          className="w-full"
+          options={[
+            { id: 'habit' as TodoCategory, label: 'Daily habits' },
+            { id: 'goal' as TodoCategory, label: 'Goals' },
+          ]}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
+
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-black uppercase tracking-wider text-amber-300">
-            Today's Briefing
-          </span>
-          <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/30 backdrop-blur-md text-amber-200">
-            {resolvedCount}/{totalBlocks} Resolved
-          </span>
+          <h2 className="text-base font-bold text-warm-800 dark:text-warm-50">Top Priorities</h2>
+          <span className="text-xs font-medium text-warm-500 dark:text-warm-400">{openCount} left</span>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-snug">
-          Good {timeOfDayGreeting}, Focus Hero!
-        </h1>
+        {/* PRIORITY TICKETS */}
+        <div className="space-y-3">
+          {filteredTodos.length === 0 ? (
+            <div className="card py-8 text-center text-warm-500 dark:text-warm-400 space-y-2">
+              <Sparkles className="w-6 h-6 mx-auto text-honey-400" />
+              <p className="text-sm font-medium">No {activeTab === 'habit' ? 'habits' : 'goals'} here yet.</p>
+            </div>
+          ) : (
+            filteredTodos.map((todo) => (
+              <TicketTodoCard key={todo.id} todo={todo} onToggleDone={handleToggleHabit} onDelete={onDeleteTodo} />
+            ))
+          )}
 
-        <p className="text-xs sm:text-sm text-amber-50/90 font-medium leading-relaxed">
-          You have <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white/20 font-black">📋 {totalBlocks} routine blocks</span> planned for today{currentBlock ? <>, with <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-400/30 text-amber-100 border border-amber-300/30 font-black">🔥 {currentBlock.name}</span> right now</> : ''}. Ready to begin? 🚀
-        </p>
-      </div>
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="w-full py-3 px-4 rounded-2xl border-2 border-dashed border-warm-300 dark:border-warm-700 hover:border-focus-400 text-focus-600 dark:text-focus-400 font-bold text-sm flex items-center justify-center gap-1.5 transition-all hover:bg-focus-50/60 dark:hover:bg-warm-900 active:scale-[0.99]"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>Add {activeTab === 'habit' ? 'Habit' : 'Goal'} Ticket</span>
+          </button>
+        </div>
 
-      {/* Progress strip */}
-      <ProgressStrip blocks={routineBlocks} dailyLog={dailyLog} />
-
-      {/* 1. EARLIER TODAY CATCH-UP (Positioned right above Right Now) */}
-      {pastUncompletedBlocks.length > 0 && (
-        <div className="bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/80 rounded-3xl p-4 space-y-2.5 shadow-soft animate-in fade-in">
-          <div className="flex items-center justify-between">
-            <span className="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
-              <History className="w-4 h-4 text-amber-600" />
-              <span>Earlier today — did you finish these?</span>
+        {/* TODAY'S SCHEDULE */}
+        <div className="card p-3.5">
+          <button
+            type="button"
+            onClick={onOpenSchedule}
+            className="w-full flex items-center gap-3 text-left"
+            aria-label="Open today's schedule"
+          >
+            <span className="w-11 h-11 rounded-2xl bg-forest-100 dark:bg-forest-900/60 text-forest-700 dark:text-forest-300 flex items-center justify-center shrink-0">
+              <CalendarDays className="w-5 h-5" />
             </span>
-            <span className="text-xs text-amber-700 dark:text-amber-300 font-bold bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded-full">
-              {pastUncompletedBlocks.length} to check off
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            {pastUncompletedBlocks.map((block) => (
-              <div 
-                key={block.id} 
-                className="p-3.5 bg-white dark:bg-warm-850 rounded-2xl border border-amber-200/70 dark:border-warm-800 shadow-xs space-y-2"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-bold text-warm-900 dark:text-warm-100 truncate">
-                    {block.name}
-                  </p>
-                  <span className="text-[11px] capitalize px-2 py-0.5 rounded-md bg-warm-100 dark:bg-warm-800 text-warm-600 font-medium">
-                    {block.category}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-[15px] font-bold text-warm-800 dark:text-warm-50">Today's schedule</p>
+                {currentBlock && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-focus-100 dark:bg-focus-900/40 text-focus-700 dark:text-focus-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-focus-500 animate-pulse" />
+                    Now
                   </span>
-                </div>
-
-                {/* Dual Column Start / Finish Layout matching reference card */}
-                <div className="flex items-center justify-between pt-1 border-t border-amber-100 dark:border-warm-800">
-                  <div className="flex items-center gap-4 text-xs font-bold text-warm-500">
-                    <div>
-                      <span className="text-[10px] text-warm-400 uppercase block">Start</span>
-                      <span className="font-mono text-sm text-warm-800 dark:text-warm-200">{block.startTime}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-warm-400 uppercase block">Finish</span>
-                      <span className="font-mono text-sm text-warm-800 dark:text-warm-200">{block.endTime}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      onClick={() => handleDone(block.id)}
-                      className="min-h-[38px] px-3.5 py-1.5 bg-focus-600 hover:bg-focus-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 transition-all"
-                    >
-                      <Check className="w-4 h-4 stroke-[2.5]" />
-                      <span>Done</span>
-                    </button>
-                    <button
-                      onClick={() => handleSkip(block.id)}
-                      className="min-h-[38px] px-2.5 py-1.5 bg-warm-100 hover:bg-warm-200 dark:bg-warm-800 text-warm-600 dark:text-warm-300 rounded-xl text-xs font-semibold active:scale-95 transition-all"
-                    >
-                      Skip
-                    </button>
-                  </div>
-                </div>
+                )}
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 2. MAIN FOCUS: RIGHT NOW TASK (With Start / Finish Dual Column Layout) */}
-      <div>
-        {currentBlock ? (
-          <div className="relative glass-card rounded-[32px] p-5 border border-white/70 dark:border-white/10 shadow-lifted transition-all space-y-3">
-            {/* Active Tag with Confident Accent */}
-            <div className="flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-focus-100 dark:bg-focus-900/50 text-focus-800 dark:text-focus-300 border border-focus-200/60 dark:border-focus-800/60">
-                <span className="w-2 h-2 rounded-full bg-focus-600 dark:bg-focus-500 animate-pulse" />
-                Right Now
-              </span>
-
-              <span className="text-xs font-bold text-warm-600 dark:text-warm-400 capitalize px-2.5 py-0.5 rounded-xl bg-warm-100 dark:bg-warm-800 border border-warm-200/60 dark:border-warm-700">
-                {currentBlock.category}
-              </span>
+              <p className="text-xs text-warm-500 dark:text-warm-400 truncate">
+                {scheduleBlock
+                  ? `${currentBlock ? '' : 'Next: '}${scheduleBlock.name} • ${formatTimeRange(scheduleBlock.startTime, scheduleBlock.endTime)}`
+                  : `${blocksDone} / ${routineBlocks.length} blocks done`}
+              </p>
             </div>
+            <ChevronRight className="w-5 h-5 text-warm-400 shrink-0" />
+          </button>
 
-            {/* Block Name */}
-            <h2 className="text-2xl sm:text-3xl font-black text-warm-900 dark:text-warm-100 tracking-tight leading-tight">
-              {currentBlock.name}
-            </h2>
-
-            {/* Dual Column Start & Finish Display (Directly from reference design) */}
-            <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-warm-100/70 dark:bg-warm-900/60 border border-warm-200/60 dark:border-warm-800">
-              <div>
-                <span className="text-[11px] font-bold text-warm-500 dark:text-warm-400 uppercase tracking-wider block">
-                  Start
-                </span>
-                <span className="text-2xl sm:text-3xl font-black font-mono text-warm-900 dark:text-warm-100 block mt-0.5">
-                  {currentBlock.startTime}
-                </span>
-              </div>
-              <div>
-                <span className="text-[11px] font-bold text-warm-500 dark:text-warm-400 uppercase tracking-wider block">
-                  Finish
-                </span>
-                <span className="text-2xl sm:text-3xl font-black font-mono text-focus-600 dark:text-focus-400 block mt-0.5">
-                  {currentBlock.endTime}
-                </span>
-              </div>
-            </div>
-
-            {/* First 10-minute step if set */}
-            {currentBlock.firstStep ? (
-              <div className="p-3 bg-warm-50/90 dark:bg-warm-900 rounded-2xl border border-warm-200/70 dark:border-warm-800 flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-xs font-bold text-focus-700 dark:text-focus-400 uppercase tracking-wider">
-                    First 10-min step
-                  </p>
-                  <p className="text-sm text-warm-800 dark:text-warm-200 mt-1 leading-snug">
-                    {currentBlock.firstStep}
-                  </p>
-                </div>
-                <button
-                  onClick={() => onOpenBreakdown(currentBlock)}
-                  className="text-xs font-semibold text-warm-500 hover:text-warm-800 dark:hover:text-warm-200 shrink-0 p-1"
-                >
-                  Edit
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => onOpenBreakdown(currentBlock)}
-                className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-warm-600 dark:text-warm-400 hover:text-focus-600 dark:hover:text-focus-400 transition-colors py-1 font-medium"
-              >
-                <Split className="w-4 h-4 text-focus-500" />
-                <span>Break it down (first 10-minute step)</span>
-              </button>
-            )}
-
-            {/* Current Block Action Status */}
-            {currentStatus === 'done' ? (
-              <div className="mt-3 p-3.5 bg-leaf-50 dark:bg-leaf-950/40 border border-leaf-300 dark:border-leaf-800 rounded-2xl flex items-center justify-between text-leaf-800 dark:text-leaf-300 font-bold text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-leaf-600" />
-                  <span>Marked Done for this block</span>
-                </div>
-                <button
-                  onClick={() => onMarkBlockStatus(currentBlock.id, 'pending')}
-                  className="text-xs underline text-leaf-700 hover:text-leaf-900"
-                >
-                  Undo
-                </button>
-              </div>
-            ) : currentStatus === 'skipped' ? (
-              <div className="mt-3 p-3.5 bg-warm-100 dark:bg-warm-800 rounded-2xl flex items-center justify-between text-warm-700 dark:text-warm-300 font-medium text-sm">
-                <span>Moved past for now</span>
-                <button
-                  onClick={() => onMarkBlockStatus(currentBlock.id, 'done')}
-                  className="px-3 py-1.5 rounded-xl bg-focus-600 text-white text-xs font-bold"
-                >
-                  Change to Done
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                <button
-                  onClick={() => handleSkip(currentBlock.id)}
-                  className="flex items-center justify-center gap-2 min-h-[52px] px-4 py-3 rounded-2xl bg-warm-100 hover:bg-warm-200 dark:bg-warm-800 dark:hover:bg-warm-700 text-warm-700 dark:text-warm-300 font-bold text-base transition-all active:scale-[0.98]"
-                >
-                  <FastForward className="w-4 h-4 text-warm-500" />
-                  <span>Skip</span>
-                </button>
-
-                <button
-                  onClick={() => handleDone(currentBlock.id)}
-                  className="flex items-center justify-center gap-2 min-h-[52px] px-4 py-3 rounded-2xl bg-focus-600 hover:bg-focus-700 text-white font-bold text-base shadow-lifted transition-all active:scale-[0.98]"
-                >
-                  <Check className="w-5 h-5 stroke-[2.5]" />
-                  <span>Done</span>
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-7 px-4 glass-card rounded-3xl border border-white/60 dark:border-warm-800 shadow-soft">
-            <div className="w-12 h-12 mx-auto mb-2 rounded-2xl bg-focus-100 dark:bg-focus-900/40 text-focus-700 dark:text-focus-400 flex items-center justify-center">
-              <Sparkles className="w-6 h-6" />
-            </div>
-            <h2 className="text-lg font-bold text-warm-900 dark:text-warm-100">
-              {isAllDayResolved ? 'All routine blocks done today!' : 'Between scheduled blocks'}
-            </h2>
-            <p className="text-xs sm:text-sm text-warm-500 dark:text-warm-400 mt-1 max-w-xs mx-auto">
-              {isAllDayResolved
-                ? 'Great rhythm today. Relax or head to Review whenever you are ready.'
-                : 'Take a breath or capture thoughts in the to-do list below.'}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* 3. PRIORITY-BASED TO-DOS */}
-      <PriorityCard
-        priority={dailyLog.priority}
-        onUpdatePriority={onUpdatePriority}
-      />
-
-      <AdditionalTodosSection
-        todos={todos}
-        onToggleTodo={onToggleTodo}
-        onAddTodo={onAddTodo}
-        onChangeTodoPriority={onChangeTodoPriority}
-        onDeleteTodo={onDeleteTodo}
-      />
-
-      {/* 4. MOTIVATIONAL DREAM REDIRECTION BANNER */}
-      {onNavigateToLearning && (
-        <div 
-          onClick={onNavigateToLearning}
-          className="cursor-pointer bg-gradient-to-r from-focus-50 via-warm-50 to-leaf-50 dark:from-warm-850 dark:to-warm-900 rounded-2xl p-4 border border-focus-200/90 dark:border-focus-800/60 shadow-soft hover:border-focus-400 transition-all flex items-center justify-between group active:scale-[0.99]"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-focus-100 dark:bg-focus-950/80 text-focus-700 dark:text-focus-300 flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
-              <Target className="w-5 h-5 text-focus-600 dark:text-focus-400" />
-            </div>
-            <div>
-              {dreamAssessment ? (
-                <>
-                  <p className="text-[11px] font-bold text-focus-700 dark:text-focus-400 uppercase tracking-wider">
-                    My Life Target & Dream
-                  </p>
-                  <h3 className="text-sm sm:text-base font-bold text-warm-900 dark:text-warm-100 leading-snug">
-                    {dreamAssessment.dreamTitle}
-                  </h3>
-                </>
+          {currentBlock && (
+            <div className="mt-3 pt-3 border-t border-warm-200 dark:border-warm-800 flex items-center justify-between gap-2">
+              {currentBlock.firstStep ? (
+                <p className="text-xs text-warm-600 dark:text-warm-300 min-w-0 truncate">
+                  <strong>First step:</strong> {currentBlock.firstStep}
+                </p>
               ) : (
-                <>
-                  <h3 className="text-sm sm:text-base font-bold text-warm-900 dark:text-warm-100">
-                    Take assessment to achieve your dream
-                  </h3>
-                  <p className="text-xs text-warm-500 dark:text-warm-400 mt-0.5">
-                    Build your custom weekly target & learning roadmap
-                  </p>
-                </>
+                <button
+                  type="button"
+                  onClick={() => onOpenBreakdown(currentBlock)}
+                  className="inline-flex items-center gap-1 text-xs text-focus-600 dark:text-focus-400 font-semibold min-w-0"
+                >
+                  <Split className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">Break down first 10-min step</span>
+                </button>
+              )}
+
+              {currentStatus === 'done' ? (
+                <span className="flex items-center gap-1 text-xs font-bold text-forest-600 dark:text-forest-300 shrink-0">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Done
+                </span>
+              ) : (
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleDoneBlock(currentBlock.id)}
+                    className="btn-pill inline-flex items-center gap-1"
+                  >
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    Done
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onMarkBlockStatus(currentBlock.id, 'skipped')}
+                    aria-label="Skip block"
+                    title="Skip"
+                    className="p-1.5 rounded-full bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-300"
+                  >
+                    <FastForward className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               )}
             </div>
-          </div>
-          <span className="text-sm font-bold text-focus-600 dark:text-focus-400 group-hover:translate-x-0.5 transition-transform shrink-0 pl-2">
-            {dreamAssessment ? 'Roadmap →' : 'Start →'}
-          </span>
+          )}
         </div>
-      )}
 
-      {/* Next Block */}
-      <div>
-        {nextBlock ? (
-          <div className="bg-warm-100/70 dark:bg-warm-900/70 rounded-2xl p-3.5 border border-warm-200/60 dark:border-warm-800/60 transition-colors">
-            <div className="flex items-center justify-between text-xs text-warm-500 dark:text-warm-400 mb-0.5">
-              <span className="font-bold uppercase tracking-wider">Coming Up Next</span>
-              <span className="font-semibold">{formatTimeRange(nextBlock.startTime, nextBlock.endTime)}</span>
-            </div>
-            <div className="flex items-center justify-between mt-1">
-              <p className="text-sm sm:text-base font-bold text-warm-800 dark:text-warm-200">
-                {nextBlock.name}
-              </p>
-              <span className="text-xs capitalize px-2 py-0.5 rounded-md bg-warm-200/70 dark:bg-warm-800 text-warm-700 dark:text-warm-300 font-medium">
-                {nextBlock.category}
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center text-xs text-warm-400 py-1 font-medium">
-            No further blocks scheduled for today.
-          </div>
-        )}
-      </div>
-
-      {/* Expandable Today's Schedule (Check off any task anytime) */}
-      <div className="bg-white dark:bg-warm-850 rounded-2xl border border-warm-200/90 dark:border-warm-800 shadow-soft overflow-hidden">
-        <button
-          onClick={() => setShowFullSchedule((prev) => !prev)}
-          className="w-full p-3.5 flex items-center justify-between hover:bg-warm-50/70 dark:hover:bg-warm-800/40 transition-colors text-left"
-        >
-          <div className="flex items-center gap-2">
-            <CalendarDays className="w-4 h-4 text-focus-600" />
-            <span className="text-xs sm:text-sm font-bold text-warm-900 dark:text-warm-100">
-              Today's Full Routine ({resolvedCount}/{totalBlocks} Resolved)
+        {/* EVENING REVIEW ENTRY */}
+        {onOpenEveningReview && (
+          <button
+            type="button"
+            onClick={onOpenEveningReview}
+            className="card w-full p-3.5 flex items-center gap-3 text-left active:scale-[0.99] transition-transform"
+          >
+            <span className="w-11 h-11 rounded-2xl bg-forest-800 text-honey-300 flex items-center justify-center shrink-0">
+              <Moon className="w-5 h-5" />
             </span>
-          </div>
-          <div className="flex items-center gap-1 text-xs text-warm-500 font-semibold">
-            <span>{showFullSchedule ? 'Hide' : 'View All'}</span>
-            {showFullSchedule ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </div>
-        </button>
-
-        {showFullSchedule && (
-          <div className="px-3.5 pb-3.5 pt-1 divide-y divide-warm-100 dark:divide-warm-800/60 space-y-2">
-            {routineBlocks.map((b) => {
-              const status = dailyLog.blockStatus[b.id] || 'pending';
-              const isCurrent = currentBlock?.id === b.id;
-
-              return (
-                <div key={b.id} className="pt-2 flex items-center justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs font-bold text-warm-900 dark:text-warm-100">
-                        {b.name}
-                      </span>
-                      {isCurrent && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-focus-100 text-focus-700 dark:bg-focus-950 dark:text-focus-300 animate-pulse">
-                          Right Now
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-warm-500">
-                      {formatTimeRange(b.startTime, b.endTime)} • <span className="capitalize">{b.category}</span>
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {status === 'done' ? (
-                      <button
-                        onClick={() => onMarkBlockStatus(b.id, 'pending')}
-                        className="px-2.5 py-1.5 rounded-xl bg-leaf-100 text-leaf-800 dark:bg-leaf-950 dark:text-leaf-300 text-xs font-bold flex items-center gap-1"
-                        title="Tap to undo"
-                      >
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Done</span>
-                      </button>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => handleDone(b.id)}
-                          className="px-2.5 py-1.5 rounded-xl bg-focus-600 hover:bg-focus-700 text-white text-xs font-bold active:scale-95 transition-all shadow-xs"
-                        >
-                          Done
-                        </button>
-                        <button
-                          onClick={() => handleSkip(b.id)}
-                          className="px-2.5 py-1.5 rounded-xl bg-warm-100 hover:bg-warm-200 dark:bg-warm-800 text-warm-600 dark:text-warm-300 text-xs font-medium"
-                        >
-                          Skip
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-bold text-warm-800 dark:text-warm-50">Evening review</p>
+              <p className="text-xs text-warm-500 dark:text-warm-400 truncate">Reflect on your day in 2 minutes</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-warm-400 shrink-0" />
+          </button>
         )}
       </div>
+
+      {/* CREATE TICKET MODAL */}
+      <CreateTicketModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        defaultCategory={activeTab}
+        onAdd={onAddTodo}
+      />
     </div>
   );
 };

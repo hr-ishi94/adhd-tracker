@@ -26,7 +26,7 @@ export const ToastUndo: React.FC<ToastUndoProps> = ({
 
   return (
     <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+4.25rem)] left-4 right-4 z-45 max-w-sm mx-auto animate-in slide-in-from-bottom-3 duration-200">
-      <div className="bg-warm-900 dark:bg-warm-100 text-white dark:text-warm-900 rounded-xl px-3.5 py-2.5 shadow-lifted border border-warm-700/60 dark:border-warm-300/60 flex items-center justify-between gap-3">
+      <div className="bg-warm-800 dark:bg-warm-100 text-white dark:text-warm-900 rounded-2xl px-3.5 py-2.5 shadow-lifted border border-warm-700/60 dark:border-warm-300/60 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 truncate text-xs">
           {isDone ? (
             <CheckCircle className="w-4 h-4 text-focus-400 dark:text-focus-600 shrink-0" />

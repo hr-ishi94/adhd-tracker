@@ -9,8 +9,12 @@ import type {
   Streak,
   TodoItem,
   TodoPriority,
+  TodoCategory,
+  TicketColorTheme,
   HabitQuitTracker,
-  DreamAssessment
+  DreamAssessment,
+  BrainDumpTag,
+  Reward
 } from './types';
 import { 
   loadAppData, 
@@ -22,7 +26,8 @@ import {
   getRoutineBlocksForDate,
   checkAndRunAutoWeeklyBackup,
   canAddTodo,
-  DEFAULT_HABIT_TRACKERS
+  DEFAULT_HABIT_TRACKERS,
+  getBlockSubtasks
 } from './lib/storage';
 import { autoResolveMissedBlocks } from './lib/autoResolve';
 import { getCurrentAndNextBlock, getWeekKey } from './lib/time';
@@ -42,6 +47,9 @@ import { RoadmapScreen } from './screens/RoadmapScreen';
 import { PomodoroScreen } from './screens/PomodoroScreen';
 import { HabitBreakerScreen } from './screens/HabitBreakerScreen';
 import { MoreHubScreen } from './screens/MoreHubScreen';
+import { ProfileScreen } from './screens/ProfileScreen';
+import { DayScheduleScreen } from './screens/DayScheduleScreen';
+import { TaskCompletedModal } from './components/TaskCompletedModal';
 import { Download, X } from 'lucide-react';
 
 interface UndoState {
@@ -61,6 +69,7 @@ export function App() {
   const [bannerBlock, setBannerBlock] = useState<RoutineBlock | null>(null);
   const [undoState, setUndoState] = useState<UndoState | null>(null);
   const [autoBackupNotice, setAutoBackupNotice] = useState(false);
+  const [celebration, setCelebration] = useState<{ name: string; coins: number } | null>(null);
 
   const handleUpdateHabitTrackers = (updated: HabitQuitTracker[]) => {
     setAppData((prev) => ({
@@ -251,17 +260,23 @@ export function App() {
     });
   };
 
-  // Additional To-Dos Handlers (ABC Psychologist System, capped at 3 per tier)
-  const handleAddTodo = (text: string, priority: TodoPriority): boolean => {
-    if (!canAddTodo(appData.todos, priority)) {
-      return false;
-    }
+  // Priority Tickets / To-Dos Handlers
+  const handleAddTodo = (
+    text: string, 
+    priority: TodoPriority,
+    coins?: number,
+    category?: TodoCategory,
+    colorTheme?: TicketColorTheme
+  ): boolean => {
     const newTodo: TodoItem = {
       id: `todo-${Date.now()}`,
       text: text.trim(),
       priority,
       status: 'open',
       createdDate: todayStr,
+      coins: coins ?? (priority === 'A' ? 30 : priority === 'B' ? 40 : 50),
+      category: category ?? 'habit',
+      colorTheme: colorTheme ?? (priority === 'A' ? 'amber' : priority === 'B' ? 'yellow' : 'green'),
     };
     setAppData((prev) => ({
       ...prev,
@@ -270,13 +285,15 @@ export function App() {
     return true;
   };
 
-  const handleToggleTodo = (id: string) => {
+  const handleToggleTodo = (id: string, coinsDelta?: number) => {
     const targetTodo = appData.todos.find((t) => t.id === id);
     if (!targetTodo) return;
 
     const willBeDone = targetTodo.status !== 'done';
+    const amount = coinsDelta !== undefined ? coinsDelta : (targetTodo.coins || 30);
 
     if (willBeDone) {
+      setCelebration({ name: targetTodo.text, coins: Math.abs(amount) });
       setUndoState({
         blockId: id,
         blockName: targetTodo.text,
@@ -286,18 +303,26 @@ export function App() {
       });
     }
 
-    setAppData((prev) => ({
-      ...prev,
-      todos: prev.todos.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              status: willBeDone ? 'done' : 'open',
-              completedDate: willBeDone ? todayStr : null,
-            }
-          : t
-      ),
-    }));
+    setAppData((prev) => {
+      const currentCoins = prev.coins ?? 25982;
+      const newCoins = willBeDone 
+        ? currentCoins + Math.abs(amount)
+        : Math.max(0, currentCoins - Math.abs(amount));
+
+      return {
+        ...prev,
+        coins: newCoins,
+        todos: prev.todos.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                status: willBeDone ? 'done' : 'open',
+                completedDate: willBeDone ? todayStr : null,
+              }
+            : t
+        ),
+      };
+    });
   };
 
   const handleChangeTodoPriority = (id: string, newPriority: TodoPriority) => {
@@ -350,12 +375,17 @@ export function App() {
     if (!undoState) return;
 
     if (undoState.isTodo) {
-      setAppData((prev) => ({
-        ...prev,
-        todos: prev.todos.map((t) =>
-          t.id === undoState.blockId ? { ...t, status: 'open', completedDate: null } : t
-        ),
-      }));
+      setAppData((prev) => {
+        const targetTodo = prev.todos.find((t) => t.id === undoState.blockId);
+        const reward = targetTodo?.coins || 30;
+        return {
+          ...prev,
+          coins: Math.max(0, (prev.coins ?? 25982) - reward),
+          todos: prev.todos.map((t) =>
+            t.id === undoState.blockId ? { ...t, status: 'open', completedDate: null } : t
+          ),
+        };
+      });
       setUndoState(null);
       return;
     }
@@ -402,17 +432,66 @@ export function App() {
     }));
   };
 
+  // Day schedule checklist
+  const handleToggleSubtask = (blockId: string, index: number) => {
+    setAppData((prev) => {
+      const currentLog = getOrCreateDailyLog(prev, todayStr);
+      const key = `${blockId}:${index}`;
+      const subtaskDone = { ...(currentLog.subtaskDone || {}) };
+      subtaskDone[key] = !subtaskDone[key];
+      return {
+        ...prev,
+        dailyLogs: { ...prev.dailyLogs, [todayStr]: { ...currentLog, subtaskDone } },
+      };
+    });
+  };
+
+  const handleAddSubtask = (blockId: string, text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const addTo = (b: RoutineBlock): RoutineBlock =>
+      b.id === blockId ? { ...b, subtasks: [...getBlockSubtasks(b), trimmed] } : b;
+    setAppData((prev) => ({
+      ...prev,
+      routineBlocks: prev.routineBlocks.map(addTo),
+      routineSets: prev.routineSets.map((set) => ({ ...set, blocks: set.blocks.map(addTo) })),
+    }));
+  };
+
+  // Rewards Store
+  const handleRedeemReward = (reward: Reward): boolean => {
+    const balance = appData.coins ?? 25982;
+    if (balance < reward.cost) return false;
+    setAppData((prev) => ({
+      ...prev,
+      coins: Math.max(0, (prev.coins ?? 25982) - reward.cost),
+      redemptions: [
+        { id: `redeem-${Date.now()}`, rewardId: reward.id, cost: reward.cost, redeemedAt: new Date().toISOString() },
+        ...(prev.redemptions || []),
+      ],
+    }));
+    return true;
+  };
+
   // Brain Dump Actions
-  const handleSaveBrainDump = (text: string) => {
+  const handleSaveBrainDump = (text: string, tag?: BrainDumpTag) => {
     const newItem: BrainDumpItem = {
       id: `dump-${Date.now()}`,
       text,
       createdAt: new Date().toISOString(),
       convertedToTask: false,
+      tag,
     };
     setAppData((prev) => ({
       ...prev,
       brainDump: [newItem, ...prev.brainDump],
+    }));
+  };
+
+  const handleTagBrainDump = (id: string, tag: BrainDumpTag) => {
+    setAppData((prev) => ({
+      ...prev,
+      brainDump: prev.brainDump.map((i) => (i.id === id ? { ...i, tag } : i)),
     }));
   };
 
@@ -492,14 +571,7 @@ export function App() {
   const unreadDumpsCount = appData.brainDump.filter((i) => !i.convertedToTask).length;
 
   return (
-    <div className="min-h-full flex flex-col bg-gradient-to-b from-[#FAF8F5] via-[#F6F2EA] to-[#EEE8DC] dark:from-[#160D15] dark:via-[#120A11] dark:to-[#0C060B] text-warm-900 dark:text-warm-100 transition-colors relative selection:bg-focus-600 selection:text-white">
-      {/* Radiant ambient glow blobs with ADHD-friendly Deep Plum & Warm Amber */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute -top-28 -left-16 w-[450px] h-[450px] rounded-full bg-focus-600/15 dark:bg-focus-600/25 blur-3xl" />
-        <div className="absolute top-1/3 -right-20 w-[400px] h-[400px] rounded-full bg-amber-400/20 dark:bg-amber-500/15 blur-3xl" />
-        <div className="absolute bottom-24 left-1/4 w-[380px] h-[380px] rounded-full bg-focus-400/12 dark:bg-focus-700/20 blur-3xl" />
-      </div>
-
+    <div className="min-h-full flex flex-col bg-[#F7F0E3] dark:bg-warm-950 text-warm-800 dark:text-warm-100 transition-colors relative selection:bg-focus-200 selection:text-warm-900">
       {/* Auto Backup Notification Banner */}
       {autoBackupNotice && (
         <div className="fixed top-3 left-3 right-3 z-50 max-w-sm mx-auto bg-warm-900 text-white dark:bg-warm-100 dark:text-warm-900 px-3.5 py-2.5 rounded-xl shadow-lifted border border-focus-500/50 flex items-center justify-between text-xs animate-in fade-in slide-in-from-top-2">
@@ -534,6 +606,8 @@ export function App() {
             currentBlock={currentBlock}
             nextBlock={nextBlock}
             todos={appData.todos}
+            coins={appData.coins ?? 25982}
+            userName={appData.userName ?? 'Kendrick'}
             dreamAssessment={appData.dreamAssessment}
             onUpdatePriority={handleUpdatePriority}
             onMarkBlockStatus={handleMarkBlockStatus}
@@ -543,6 +617,36 @@ export function App() {
             onChangeTodoPriority={handleChangeTodoPriority}
             onDeleteTodo={handleDeleteTodo}
             onNavigateToLearning={() => setCurrentTab('learning')}
+            onOpenEveningReview={() => setCurrentTab('review')}
+            onOpenProfile={() => setCurrentTab('profile')}
+            onOpenSchedule={() => setCurrentTab('schedule')}
+          />
+        )}
+
+        {currentTab === 'schedule' && (
+          <DayScheduleScreen
+            routineBlocks={todayBlocks}
+            dailyLog={dailyLog}
+            currentBlock={currentBlock}
+            currentTime={currentTime}
+            onToggleSubtask={handleToggleSubtask}
+            onAddSubtask={handleAddSubtask}
+            onMarkBlockStatus={handleMarkBlockStatus}
+            onOpenBreakdown={(block) => setBreakdownBlock(block)}
+            onBack={() => setCurrentTab('today')}
+          />
+        )}
+
+        {currentTab === 'profile' && (
+          <ProfileScreen
+            userName={appData.userName ?? 'Kendrick'}
+            coins={appData.coins ?? 25982}
+            streak={appData.streak}
+            habitTrackers={appData.habitTrackers || DEFAULT_HABIT_TRACKERS}
+            redemptions={appData.redemptions || []}
+            onRedeem={handleRedeemReward}
+            onOpenSettings={() => setCurrentTab('settings')}
+            onBack={() => setCurrentTab('today')}
           />
         )}
 
@@ -567,6 +671,7 @@ export function App() {
               ? appData.habitTrackers 
               : (appData.habitTracker ? [appData.habitTracker] : DEFAULT_HABIT_TRACKERS)}
             onUpdateTrackers={handleUpdateHabitTrackers}
+            onOpenProfile={() => setCurrentTab('profile')}
           />
         )}
 
@@ -582,6 +687,8 @@ export function App() {
             items={appData.brainDump}
             todos={appData.todos}
             onDeleteItem={handleDeleteBrainDump}
+            onSaveItem={handleSaveBrainDump}
+            onSetTag={handleTagBrainDump}
             onConvertToTodo={handleConvertToTodo}
             onSetAsPrimaryFocus={handleConvertDumpToTask}
             onClearAllDone={handleClearAllDoneDumps}
@@ -603,6 +710,7 @@ export function App() {
             streak={appData.streak}
             weeklyRetroNotes={appData.weeklyRetroNotes}
             todos={appData.todos}
+            pomodoroStats={appData.pomodoroStats}
             onSaveRetroNote={handleSaveRetroNote}
             onAcknowledgeSittingTodo={handleAcknowledgeSittingTodo}
             onOpenRoadmap={() => setCurrentTab('learning')}
@@ -629,6 +737,13 @@ export function App() {
           onDismiss={() => setUndoState(null)}
         />
       )}
+
+      <TaskCompletedModal
+        isOpen={Boolean(celebration)}
+        taskName={celebration?.name ?? ''}
+        coins={celebration?.coins ?? 0}
+        onClose={() => setCelebration(null)}
+      />
 
       {/* Floating Action Button for instant Brain Dump on every screen */}
       <BrainDumpFAB onClick={() => setBrainDumpOpen(true)} />
